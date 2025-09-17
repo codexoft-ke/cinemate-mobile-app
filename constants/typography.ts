@@ -23,6 +23,23 @@ export const Typography = {
     fontSize: 20,
     lineHeight: 28,
   },
+  h5: {
+    fontFamily: FontFamilies.montserrat.medium,
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  h6: {
+    fontFamily: FontFamilies.montserrat.medium,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+
+
+  paragraph: {
+    fontFamily: FontFamilies.montserrat.medium,
+    fontSize: 10,
+    lineHeight: 18,
+  },
   
   // Body text
   body: {

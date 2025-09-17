@@ -1,9 +1,115 @@
-import { Text, View } from 'react-native';
+import { AppHeader } from '@/components/ui/app-header';
+import { Text } from '@/components/ui/app-text';
+import { CineMateColors } from '@/constants/theme';
+import { Feather } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { Linking, ScrollView, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
-  return (
-    <View className='flex justify-center items-center'>
-      <Text>This Is the Profile screen</Text>
-    </View>
-  );
+
+    const router = useRouter();
+
+    interface MenuItems {
+        id: string | number
+        icon: typeof Feather.defaultProps | string
+        type: string
+        title: string
+        route: string
+    }
+
+    const menuItems: MenuItems[] = [
+        {
+            id: 1,
+            icon: 'user',
+            type: 'link',
+            title: 'Update Profile',
+            route: 'update-profile',
+        },
+        {
+            id: 2,
+            icon: 'lock',
+            type: 'link',
+            title: 'Change Password',
+            route: 'change-password',
+        },
+        {
+            id: 3,
+            icon: 'send',
+            type: 'link',
+            title: 'Send Feedback',
+            route: 'mailto:info@codexoft.tech?subject=CineMate App Feedback',
+        },
+        {
+            id: 4,
+            icon: 'info',
+            type: 'route',
+            title: 'About App',
+            route: '/profile/about-app',
+        },
+        {
+            id: 5,
+            icon: 'star',
+            type: 'link',
+            title: 'Rate Us',
+            route: 'https://play.google.com/package?com.cinemate.android',
+        }
+    ];
+
+    const logOut = () => {
+
+    }
+
+    return (
+        <View className='flex-1 bg-dark-bg'>
+            <AppHeader title='Profile' />
+
+            <ScrollView
+                className='flex-1 px-4'
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Profile Card */}
+                <View className='flex-column justify-center items-center mt-10'>
+                    <Image
+                        source={require("@/assets/images/user.jpeg")}
+                        style={{ height: 120, width: 120, borderRadius: 100, borderWidth:3, borderColor: CineMateColors.primary }}
+                    />
+                    <Text className='text-white pt-5' variant='h4' weight='bold'>Martin Ngugi</Text>
+                    <Text className='text-gray-400' variant='caption' weight='medium' >dev@codexoft.tech</Text>
+                </View>
+
+                {/* Menu Items */}
+                <View className="mt-8">
+                    {menuItems.map((item, index) => {
+                        const onPress = () => {
+                            switch (item.type) {
+                                case "link":
+                                    Linking.openURL(item.route)
+                                    break;
+
+                                case "route":
+                                    router.push(item.route)
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                        return (
+                            <TouchableOpacity key={index} className='py-5 flex-row justify-between items-center' onPress={onPress} >
+                                <Feather className='flex-shrink-0' name={item.icon} size={24} color="white" style={{ fontWeight: 'bold' }} />
+                                <Text className='text-white flex-shrink w-full text-start ml-5' variant='h6' weight='semiBold'>{item.title}</Text>
+                                <Feather className='flex-shrink-0' name='chevron-right' size={24} color="white" style={{ fontWeight: 'bold' }} />
+                            </TouchableOpacity>
+                        )
+                    })}
+                </View>
+
+                {/* Sign Out */}
+                <TouchableOpacity onPress={logOut} className='bg-red-600 w-full text-center rounded-full mt-5'>
+                    <Text className='text-center text-white py-4' weight='semiBold' >Log Out</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </View>
+    );
 }

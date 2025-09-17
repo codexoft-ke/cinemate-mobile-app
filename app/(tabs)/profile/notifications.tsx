@@ -1,13 +1,13 @@
+import { View } from 'react-native';
 import { AppHeader } from '@/components/ui/app-header';
 import { Text } from '@/components/ui/app-text';
-import { View } from 'react-native';
 
-export default function Favourites() {
+export default function Notifications() {
     return (
         <View className='flex-1 bg-dark-bg'>
-            <AppHeader title='Favourites' />
+            <AppHeader title='Notifications' />
             <View className='flex-1 justify-center items-center'>
-                <Text className='text-white'>Favourites</Text>
+                <Text className='text-white'>Notifications</Text>
             </View>
         </View>
     );

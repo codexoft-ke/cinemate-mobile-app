@@ -8,6 +8,8 @@ import '../global.css';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useLoadFonts } from '@/hooks/use-fonts';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,11 +34,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
+      <SafeAreaView className="flex-1 bg-dark-bg" edges={['bottom', 'top']}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="movie/[id]" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </SafeAreaView>
     </ThemeProvider>
   );
 }

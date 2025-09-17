@@ -7,7 +7,13 @@ module.exports = function (api) {
     ],
     plugins: [
       // Required for nativewind
-      "react-native-reanimated/plugin",
+      [
+       'react-native-worklets/plugin',
+        {
+          globals: ["__scanCodes"],
+          strict: false, // Disable strict mode to reduce warnings
+        },
+      ],
     ],
   };
 };
