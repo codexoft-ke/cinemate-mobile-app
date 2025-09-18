@@ -4,7 +4,7 @@ export interface Movie {
     poster?: string;
     backdrop?: string;
     releaseDate?: string;
-    genre?: string | number;
+    genre?: string | number | string[] | number[];
     rating?: number;
     duration?: number | string;
     director?: string;
@@ -16,6 +16,7 @@ export interface Movie {
     isWatchlisted?: boolean;
     isTrending?: boolean;
     isRecommended?: boolean;
+    isSeries?: boolean;
 
     [key: string]: any | string[] | number | undefined;
 }

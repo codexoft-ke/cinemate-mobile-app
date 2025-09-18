@@ -1,17 +1,16 @@
 import MovieCard from '@/components/movie-card';
-import Slider from '@/components/slider';
 import { Text } from '@/components/ui/app-text';
 import SectionHeader from '@/components/ui/section-header';
 import { CineMateColors } from '@/constants/theme';
 import { Movie } from '@/types';
 import { getYear } from '@/utils';
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { FlashList } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { memo } from 'react';
-import { Dimensions, Pressable, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { memo, useCallback, useState } from 'react';
+import { Dimensions, Pressable, ScrollView, TextInput, View, TouchableOpacity } from 'react-native';
+import Carousel from 'react-native-reanimated-carousel';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -25,20 +24,21 @@ interface MovieSliderCardProps {
     movie: Movie;
     onPress?: () => void;
     onFavoritePress?: () => void;
-    width?: number;
+    width?: number | string;
     height?: number;
 }
-
 export default function HomeScreen() {
 
     const router = useRouter();
+    const [currentSlide, setCurrentSlide] = useState(0);
 
-    const trendingMovies: Movie[] = [
+    const [trendingMovies, setTrendingMovies] = useState<Movie[]>([
         {
             id: 1311031,
             title: "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
             poster: "https://image.tmdb.org/t/p/w500/1RgPyOhN4DRs225BGTlHJqCudII.jpg",
             isFavorite: false,
+            isSeries: true,
             releaseDate: "2025-02-11",
             genre: "Animation",
             rating: 8.5
@@ -124,9 +124,9 @@ export default function HomeScreen() {
             genre: "Superhero",
             rating: 8.7
         }
-    ];
+    ])
 
-    const recommendation: Movie[] = [
+    const [recommendation, setRecommendation] = useState<Movie[]>([
         {
             id: 278,
             title: "The Shawshank Redemption",
@@ -217,9 +217,9 @@ export default function HomeScreen() {
             genre: "Comedy",
             rating: 8.498
         }
-    ];
+    ]);
 
-    const upcomingMovies: Movie[] = [
+    const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([
         {
             id: 1311031,
             title: "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
@@ -251,7 +251,7 @@ export default function HomeScreen() {
             genre: "Action",
             rating: 7.1
         }
-    ];
+    ]);
 
     const movieCategories = [
         { id: 0, name: "All" },
@@ -272,17 +272,51 @@ export default function HomeScreen() {
         router.push(`/search?query=${encodeURIComponent(text)}`);
     }
 
-    const handleMoviePress = (movie: any) => {
-        console.log("Movie pressed:", movie.title);
-        // Navigate to movie details page
+    const handleMoviePress = (movie: Movie) => {
         router.push(`/movie/${movie.id}?title=${movie.title}`);
     }
 
-    const handleFavoritePress = (movie: any) => {
-        console.log("Favorite toggled for:", movie.title);
-        // Handle favorite toggle logic here
-        // You can implement your favorite state management here
-    }
+    // Update the movie's favorite status in the arrays
+    const handleFavoritePress = useCallback((movie: Movie, category: string) => {
+        let movieIndex: number;
+        switch (category) {
+            case "trending":
+                movieIndex = trendingMovies.findIndex(m => m.id === movie.id);
+                setTrendingMovies(prev => {
+                    const updatedMovies = [...prev];
+                    updatedMovies[movieIndex] = {
+                        ...updatedMovies[movieIndex],
+                        isFavorite: !updatedMovies[movieIndex].isFavorite
+                    };
+                    return updatedMovies;
+                });
+                break;
+            case "recommendation":
+                movieIndex = recommendation.findIndex(m => m.id === movie.id);
+                setRecommendation(prev => {
+                    const updatedMovies = [...prev];
+                    updatedMovies[movieIndex] = {
+                        ...updatedMovies[movieIndex],
+                        isFavorite: !updatedMovies[movieIndex].isFavorite
+                    };
+                    return updatedMovies;
+                });
+                break;
+            case "upcoming":
+                movieIndex = upcomingMovies.findIndex(m => m.id === movie.id);
+                setUpcomingMovies(prev => {
+                    const updatedMovies = [...prev];
+                    updatedMovies[movieIndex] = {
+                        ...updatedMovies[movieIndex],
+                        isFavorite: !updatedMovies[movieIndex].isFavorite
+                    };
+                    return updatedMovies;
+                });
+                break;
+            default:
+                return;
+        }
+    },[recommendation, trendingMovies, upcomingMovies]);
 
     return (
         <ScrollView
@@ -294,7 +328,7 @@ export default function HomeScreen() {
             <View className='flex-row justify-between items-center px-4 mt-4'>
                 <View className='flex-row items-center'>
                     <Image
-                        style={{ width: 60, height: 60, borderRadius: 32, marginRight: 8,borderWidth:3, borderColor: CineMateColors.primary }}
+                        style={{ width: 60, height: 60, borderRadius: 32, marginRight: 8, borderWidth: 3, borderColor: CineMateColors.primary }}
                         contentFit="cover"
                         source={require('@/assets/images/logo.png')}
                         placeholder={require('@/assets/images/logo.png')}
@@ -305,7 +339,7 @@ export default function HomeScreen() {
                     </View>
                 </View>
                 <View>
-                    <Feather name="bell" size={24} color="white" className='p-4 rounded-full bg-[#192C40]' onPress={()=>router.push("/profile/notifications")} />
+                    <Feather name="bell" size={24} color="white" className='p-4 rounded-full bg-[#192C40]' onPress={() => router.push("/profile/notifications")} />
                 </View>
             </View>
 
@@ -317,43 +351,69 @@ export default function HomeScreen() {
                     className='text-white ml-3 flex-1 font-montserrat-medium py-3 focus-visible:outline-none'
                     placeholder="Search for movies, TV shows..."
                     placeholderTextColor="#666"
-                    onSubmitEditing={(event) => onSearch(event.nativeEvent.text)}
+                    onEndEditing={(event) => onSearch(event.nativeEvent.text)}
                 />
             </View>
 
-            {/* Categories */}
-            <View className='mt-8 px-4'>
-                <View className='flex-row items-center justify-between mb-2'>
-                    <Text className="text-white text-xl" variant='h6' weight='semiBold'>Popular Categories</Text>
+            {/* Popular Movies & TV Shows */}
+            <View className='mt-8'>
+                <View className='px-4'>
+                    <View className='flex-row items-center justify-between mb-2'>
+                        <Text className="text-white text-xl" variant='h6' weight='semiBold'>Popular Movies & TV Shows</Text>
+                    </View>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className='my-3'
+                        contentContainerStyle={{ paddingHorizontal: 4, rowGap: 8, columnGap: 10 }}>
+                        {movieCategories.map(category => (
+                            <CategoryCard key={category.id} data={category} />
+                        ))}
+                    </ScrollView>
                 </View>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    className='my-3'
-                    contentContainerStyle={{ paddingHorizontal: 4, rowGap: 8, columnGap: 10 }}>
-                    {movieCategories.map(category => (
-                        <CategoryCard key={category.id} data={category} />
-                    ))}
-                </ScrollView>
 
-                <Slider
-                    data={trendingMovies}
-                    renderItem={({ item }) => (
-                        <MovieSliderCard
-                            movie={item}
-                            height={200}
-                            onPress={() => handleMoviePress(item)}
-                            onFavoritePress={() => handleFavoritePress(item)}
-                        />
-                    )}
-                    autoplay
-                    loop
-                    pagination
-                    height={200}
-                    navigationButtons={false}
-                    debug={false}
-                    autoPlayInterval={4000}
-                />
+                <View>
+                    <Carousel
+                        width={screenWidth}
+                        height= {screenWidth*(9/16)}
+                        data={trendingMovies}
+                        renderItem={({ item }: { item: Movie }) => (
+                            <View style={{ paddingHorizontal: 16, width: screenWidth }}>
+                                <MovieCard
+                                    key={item.id}
+                                    data={item}
+                                    style={{ width: "100%", height: screenWidth*(9/16), }}
+                                    orientation='horizontal'
+                                    onPress={() => handleMoviePress(item)}
+                                    onFavoritePress={() => handleFavoritePress(item, "trending")}
+                                />
+                            </View>
+                        )}
+                        autoPlay={true}
+                        autoPlayInterval={4000}
+                        loop={true}
+                        mode="parallax"
+                        onSnapToItem={(index) => setCurrentSlide(index)}
+                        style={{ width: screenWidth, alignSelf: 'center' }}
+                    />
+
+                    {/* Pagination Dots */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 5 }}>
+                        {trendingMovies.map((_, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={{
+                                    width: index === currentSlide ? 24 : 8,
+                                    height: 8,
+                                    borderRadius: 4,
+                                    backgroundColor: index === currentSlide ? CineMateColors.primary : '#666',
+                                    marginHorizontal: 4,
+                                }}
+                                activeOpacity={0.7}
+                            />
+                        ))}
+                    </View>
+                </View>
             </View>
 
 
@@ -368,19 +428,20 @@ export default function HomeScreen() {
                 <ScrollView
                     horizontal={true}
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ rowGap: 8, columnGap: 10, gap: 10 }}
+                    contentContainerStyle={{ paddingRight: 8, gap: 16 }}
                     nestedScrollEnabled={true}
                 >
-                    {recommendation.map((item,index) => (
-                        <View key={index} 
-                                style={{ width: (screenWidth  *(1/ 3))}}
-                                className='mr-5'>
+                    {recommendation.map((item, index) => (
+                        <View
+                            key={index}
+                            className='w-36'
+                        >
                             <MovieCard
-                            data={item}
-                            orientation='vertical'
-                            onPress={() => handleMoviePress(item)}
-                            onFavoritePress={() => handleFavoritePress(item)}
-                        />
+                                data={item}
+                                orientation='vertical'
+                                onPress={() => handleMoviePress(item)}
+                                onFavoritePress={() => handleFavoritePress(item, "recommendation")}
+                            />
                         </View>
                     ))}
                 </ScrollView>
@@ -388,23 +449,27 @@ export default function HomeScreen() {
 
             {/* Upcoming Movies */}
             <View className='mt-8 px-4'>
-                <View className='flex-row items-center justify-between mb-2'>
+                <View className='flex-row items-center justify-between mb-4'>
                     <Text className="text-white text-xl" variant='h6' weight='semiBold'>Coming Soon</Text>
                 </View>
                 <ScrollView
                     horizontal={true}
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ rowGap: 8, columnGap: 10, gap: 10 }}
+                    contentContainerStyle={{ paddingRight: 8, gap: 16 }}
                     nestedScrollEnabled={true}
                 >
                     {upcomingMovies.map((item, index) => (
-                        <MovieCard
+                        <View
                             key={index}
-                            data={item}
-                            orientation='vertical'
-                            onPress={() => handleMoviePress(item)}
-                            onFavoritePress={() => handleFavoritePress(item)}
-                        />
+                            className='w-36'
+                        >
+                            <MovieCard
+                                data={item}
+                                orientation='vertical'
+                                onPress={() => handleMoviePress(item)}
+                                onFavoritePress={() => handleFavoritePress(item, "upcoming")}
+                            />
+                        </View>
                     ))}
                 </ScrollView>
             </View>
@@ -430,6 +495,7 @@ const CategoryCard = memo(function CategoryCard({ data }: { data: Category }) {
     );
 });
 
+
 const MovieSliderCard = memo(function MovieSliderCard({
     movie,
     onPress,
@@ -454,7 +520,7 @@ const MovieSliderCard = memo(function MovieSliderCard({
         <TouchableOpacity
             activeOpacity={0.9}
             onPress={onPress}
-            style={{ width: '100%' }}
+            style={{ width: width as number, height: height as number }}
         >
             <View
                 className="w-full rounded-xl overflow-hidden bg-gray-800 shadow-lg"

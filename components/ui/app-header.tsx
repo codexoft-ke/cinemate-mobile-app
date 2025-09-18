@@ -22,7 +22,7 @@ export function AppHeader({
                 <Feather name='arrow-left' size={25} color="white" style={{ fontWeight: 'bold' }} onPress={() => router.back()} />
             )}
             {title && (
-                <Text className='text-white' variant='h6' weight='bold' >{title}</Text>
+                <Text className='text-white' variant='h5' weight='bold' >{title}</Text>
             )}
             {rightIcon ?? (
                 <Feather name='bell' size={25} color="white" style={{ fontWeight: 'bold' }} onPress={() => router.push("/profile/notifications")} />

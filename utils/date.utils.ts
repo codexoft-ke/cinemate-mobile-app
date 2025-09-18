@@ -61,3 +61,4 @@ export function getSeconds(date: Date | string): number {
     const d = new Date(date);
     return d.getSeconds();
 }
+

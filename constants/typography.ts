@@ -33,7 +33,11 @@ export const Typography = {
     fontSize: 16,
     lineHeight: 22,
   },
-
+  span: {
+    fontFamily: FontFamilies.montserrat.medium,
+    fontSize: 14,
+    lineHeight: 20,
+  },
 
   paragraph: {
     fontFamily: FontFamilies.montserrat.medium,

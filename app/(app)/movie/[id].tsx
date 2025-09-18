@@ -29,9 +29,7 @@ interface EpisodesTabProps {
 export default function MovieInfo() {
 
     const [activeTabIndex, setActiveTabIndex] = useState(0);
-    
-    // Static movie details - in a real app, this would come from props or API
-    const movieDetails = {
+    const [movieDetails, setMovieDetails] = useState({
         id: 291256,
         isSeries: true,
         isFavorite: false,
@@ -121,7 +119,7 @@ export default function MovieInfo() {
                 order: 8
             }
         ]
-    };
+    });
 
     const tabScrollRef = useRef<ScrollView>(null);
 
@@ -429,8 +427,7 @@ const EpisodesTab = ({ seasons }: EpisodesTabProps) => {
     }
 
     const [selectedSeason, setSelectedSeason] = useState<number>(1);
-    // Static episodes data - in a real app, this would come from API
-    const episodes: Episode[] = [
+    const [episodes, setEpisodes] = useState<Episode[]>([
         {
             id: 6225573,
             name: "Episode 1",
@@ -497,7 +494,7 @@ const EpisodesTab = ({ seasons }: EpisodesTabProps) => {
             still_path: "https://image.tmdb.org/t/p/w500/7GPpHtBUqLA7wYXImaRJtVNHSGM.jpg",
             vote_average: 7
         }
-    ];
+    ]);
 
     // Filter episodes based on selected season
     const filteredEpisodes = episodes.filter(episode =>

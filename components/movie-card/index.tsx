@@ -3,10 +3,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from "react";
-import { Dimensions, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Text } from "../ui/app-text";
-
-const { width: screenWidth } = Dimensions.get('window');
 
 interface MovieCardProps {
     data: Movie;
@@ -34,29 +32,28 @@ const MovieCard = memo(function MovieCard({
     }
 
     // Dynamic sizing based on orientation and screen size
-    const cardDimensions = orientation === 'horizontal'
+    const cardStyle = orientation === 'horizontal'
         ? {
-            width: screenWidth * 0.85,
-            height: screenWidth * 0.5,
             aspectRatio: 16 / 9
         }
         : {
-            flex: 1,
-            aspectRatio: 2 / 3,
-            minHeight: 200,
-            maxHeight: 300
+            aspectRatio: 2 / 3
         };
+
+    // Logics
+    
 
     return (
         <TouchableOpacity
             activeOpacity={0.9}
             onPress={onPress}
-            style={[{ marginBottom: 16 }, style]}
+            style={[ style]}
         >
             <View
                 className="relative overflow-hidden rounded-xl bg-gray-800"
                 style={[
-                    cardDimensions,
+                    cardStyle,
+                    style,
                     {
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 4 },
@@ -88,6 +85,19 @@ const MovieCard = memo(function MovieCard({
                     />
                 )}
 
+                {/* Series Indicator on top left */}
+                {data.isSeries && (
+                    <View className="absolute flex-row items-center  top-3 left-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+                        {/* TV Icon */}
+                        <Ionicons name="tv" size={12} color="white" />
+                        {orientation === 'horizontal' && (
+                            <Text className="text-white text-xs ml-1" variant="caption" weight="medium">
+                                Series
+                            </Text>
+                        )}
+                    </View>
+                )}
+
                 {/* Favorite button */}
                 <TouchableOpacity
                     className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm p-2.5 rounded-full"
@@ -112,8 +122,8 @@ const MovieCard = memo(function MovieCard({
                 {showDetails && (
                     <View className="absolute bottom-0 left-0 right-0 p-4">
                         <Text
-                            variant="caption"
-                            className="text-white font-semibold mb-2"
+                            variant={orientation === 'horizontal' ? 'h6' : 'span'}
+                            className="text-white font-semibold"
                             numberOfLines={2}
                             weight="semiBold"
                         >
@@ -122,7 +132,7 @@ const MovieCard = memo(function MovieCard({
 
                         {data.subTitle && (
                             <Text
-                                variant="caption"
+                                variant={orientation === 'horizontal' ? 'body' : 'movieSubtitle'}
                                 className="text-gray-300 font-semibold "
                                 numberOfLines={2}
                                 weight="semiBold"
@@ -132,23 +142,23 @@ const MovieCard = memo(function MovieCard({
                         )}
 
                         {/* Rating and year row */}
-                        <View className="flex-row items-center mb-1">
+                        <View className="flex-row items-center">
                             {data.rating && (
                                 <View className="flex-row items-center">
                                     <Feather name="star" size={12} color="#fbbf24" />
-                                    <Text variant="caption" weight="medium" className="text-yellow-400 ml-1 font-medium">
+                                    <Text variant={orientation === 'horizontal' ? 'body' : 'caption'} weight="medium" className="text-yellow-400 ml-1 font-medium">
                                         {data.rating.toFixed(1)}
                                     </Text>
                                     <Text className="text-gray-400 text-xs mx-1">•</Text>
                                 </View>
                             )}
-                            <Text className="text-gray-300" variant="caption" weight="medium">
+                            <Text className="text-gray-300" variant={orientation === 'horizontal' ? 'body' : 'caption'} weight="medium">
                                 {data.releaseDate ? new Date(data.releaseDate).getFullYear() : 'N/A'}
                             </Text>
                             {data.duration && (
                                 <>
                                     <Text className="text-gray-400 text-xs mx-1">•</Text>
-                                    <Text className="text-gray-400 text-xs" variant="caption" weight="regular">
+                                    <Text className="text-gray-400 text-xs" variant={orientation === 'horizontal' ? 'body' : 'caption'} weight="regular">
                                         {data.duration}m
                                     </Text>
                                 </>
@@ -158,8 +168,8 @@ const MovieCard = memo(function MovieCard({
                         {/* Genre and duration row */}
                         <View className="flex-row items-center">
                             {data.genre && (
-                                <Text className="text-gray-400 text-xs mr-2" variant="caption" weight="regular">
-                                    {data.genre}
+                                <Text className="text-gray-400 text-xs mr-2" variant={orientation === 'horizontal' ? 'small' : 'caption'} weight="regular">
+                                    {Array.isArray(data.genre) ? data.genre[0] : data.genre}
                                 </Text>
                             )}
                         </View>
