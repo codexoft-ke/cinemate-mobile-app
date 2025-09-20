@@ -7,7 +7,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef, useState } from "react";
 import { Dimensions, ScrollView, TouchableOpacity, View } from "react-native";
-import * as Animatable from 'react-native-animatable';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -132,6 +131,16 @@ export default function OnboardingScreen() {
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
+                onScroll={(event) => {
+                    try {
+                        const newPage = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
+                        if (newPage >= 0 && newPage < onboardingSteps.length && newPage !== currentPage) {
+                            setCurrentPage(newPage);
+                        }
+                    } catch (error) {
+                        console.error('Error in onScroll:', error);
+                    }
+                }}
                 onMomentumScrollEnd={(event) => {
                     try {
                         const newPage = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
@@ -142,6 +151,7 @@ export default function OnboardingScreen() {
                         console.error('Error in onMomentumScrollEnd:', error);
                     }
                 }}
+                scrollEventThrottle={16}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}
             >
@@ -254,16 +264,9 @@ const OnboardingSlide = ({ step, isActive }: OnboardingSlideProps) => {
             />
 
             {/* Content Container */}
-            <Animatable.View 
-                animation={isActive ? "fadeInUp" : undefined}
-                duration={600}
-                className="items-center max-w-sm"
-            >
+            <View className="items-center max-w-sm">
                 {/* Icon/Image Container */}
-                <Animatable.View
-                    animation={isActive ? "bounceIn" : undefined}
-                    delay={isActive ? 200 : 0}
-                    duration={800}
+                <View
                     className="items-center justify-center mb-12 rounded-full"
                     style={{
                         width: 200,
@@ -297,14 +300,10 @@ const OnboardingSlide = ({ step, isActive }: OnboardingSlideProps) => {
                             />
                         </View>
                     )}
-                </Animatable.View>
+                </View>
 
                 {/* Title */}
-                <Animatable.View
-                    animation={isActive ? "fadeIn" : undefined}
-                    delay={isActive ? 400 : 0}
-                    duration={600}
-                >
+                <View>
                     <Text
                         variant="h3"
                         weight="bold"
@@ -313,14 +312,10 @@ const OnboardingSlide = ({ step, isActive }: OnboardingSlideProps) => {
                     >
                         {step.title}
                     </Text>
-                </Animatable.View>
+                </View>
 
                 {/* Description */}
-                <Animatable.View
-                    animation={isActive ? "fadeIn" : undefined}
-                    delay={isActive ? 600 : 0}
-                    duration={600}
-                >
+                <View>
                     <Text
                         variant="body"
                         weight="regular"
@@ -329,8 +324,8 @@ const OnboardingSlide = ({ step, isActive }: OnboardingSlideProps) => {
                     >
                         {step.description}
                     </Text>
-                </Animatable.View>
-            </Animatable.View>
+                </View>
+            </View>
         </View>
     );
 };

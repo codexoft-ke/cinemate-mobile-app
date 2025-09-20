@@ -71,7 +71,7 @@ export default function ProfileScreen() {
                 {/* Profile Card */}
                 <View className='flex-column justify-center items-center mt-10'>
                     <Image
-                        source={require("@/assets/images/user.jpeg")}
+                        source={require("@/assets/images/icon.png")}
                         style={{ height: 120, width: 120, borderRadius: 100, borderWidth:3, borderColor: CineMateColors.primary }}
                     />
                     <Text className='text-white pt-5' variant='h4' weight='bold'>Martin Ngugi</Text>
@@ -88,7 +88,7 @@ export default function ProfileScreen() {
                                     break;
 
                                 case "route":
-                                    router.push(item.route)
+                                    router.push(item.route as any)
                                     break;
 
                                 default:

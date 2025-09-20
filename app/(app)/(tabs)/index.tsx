@@ -330,8 +330,8 @@ export default function HomeScreen() {
                     <Image
                         style={{ width: 60, height: 60, borderRadius: 32, marginRight: 8, borderWidth: 3, borderColor: CineMateColors.primary }}
                         contentFit="cover"
-                        source={require('@/assets/images/logo.png')}
-                        placeholder={require('@/assets/images/logo.png')}
+                        source={require('@/assets/images/icon.png')}
+                        placeholder={require('@/assets/images/icon.png')}
                     />
                     <View>
                         <Text className='text-white text-lg'>Welcome Back</Text>
