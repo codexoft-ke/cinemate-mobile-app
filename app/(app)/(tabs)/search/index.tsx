@@ -1,22 +1,49 @@
+import MovieCard from '@/components/movie-card';
 import { AppHeader } from '@/components/ui/app-header';
 import { Text } from '@/components/ui/app-text';
 import { Movie } from '@/types';
-import { Feather } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { useCallback, useState } from 'react';
-import { ScrollView, View, TextInput } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
-import MovieCard from '@/components/movie-card';
 import { router } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { Dimensions, Modal, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SearchScreen() {
 
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-
     const [movies, setMovies] = useState<Movie[]>([]);
-    const [sampleMovies, setSampleMovies] = useState<Movie[]>([
+    const [showFilterModal, setShowFilterModal] = useState<boolean>(false);
+
+    // Filter states
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [selectedYearRange, setSelectedYearRange] = useState<{ min: number; max: number } | null>(null);
+    const [selectedRatingRange, setSelectedRatingRange] = useState<{ min: number; max: number } | null>(null);
+    const [selectedContentType, setSelectedContentType] = useState<'all' | 'movie' | 'series'>('all');
+
+    // Available filter options
+    const availableGenres = [
+        'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Drama', 'Family',
+        'Fantasy', 'History', 'Horror', 'Music', 'Mystery', 'Romance', 'Science Fiction',
+        'Thriller', 'War', 'Western', 'Supernatural'
+    ];
+
+    const yearRanges = [
+        { label: '2020s', min: 2020, max: 2025 },
+        { label: '2010s', min: 2010, max: 2019 },
+        { label: '2000s', min: 2000, max: 2009 },
+        { label: '1990s', min: 1990, max: 1999 },
+        { label: '1980s', min: 1980, max: 1989 },
+        { label: 'Classic (Before 1980)', min: 1900, max: 1979 }
+    ];
+
+    const ratingRanges = [
+        { label: '9.0+ Masterpiece', min: 9.0, max: 10.0 },
+        { label: '8.0+ Excellent', min: 8.0, max: 8.9 },
+        { label: '7.0+ Good', min: 7.0, max: 7.9 },
+        { label: '6.0+ Decent', min: 6.0, max: 6.9 },
+        { label: 'All Ratings', min: 0, max: 10.0 }
+    ];
+    const [sampleMovies] = useState<Movie[]>([
         {
             id: 550,
             title: "Fight Club",
@@ -331,27 +358,117 @@ export default function SearchScreen() {
         }
     ])
 
+    // Calculate number of columns based on screen width
+    const screenWidth = Dimensions.get('window').width;
+    const cardWidth = 150; // Minimum card width
+    const padding = 32; // Total horizontal padding (16px on each side)
+    const spacing = 8; // Space between cards
 
-    //  Search Functionallity to be implemented
+    const numColumns = useMemo(() => {
+        const availableWidth = screenWidth - padding;
+        const columns = Math.floor(availableWidth / (cardWidth + spacing));
+        return Math.max(2, columns); // Minimum 2 columns
+    }, [screenWidth]);
+
+
+    //  Search and Filter Functionality
+    const applyFilters = (movieList: Movie[], query: string = searchQuery) => {
+        let filtered = movieList;
+
+        // Text search filter
+        if (query.trim() !== '') {
+            filtered = filtered.filter((movie: Movie) =>
+                (movie.title?.toLowerCase().includes(query.toLowerCase()) ?? false) ||
+                (Array.isArray(movie.genre) && (movie.genre as string[]).some((g: string) => g.toLowerCase().includes(query.toLowerCase()))) ||
+                (movie.synopsis?.toLowerCase().includes(query.toLowerCase()) ?? false)
+            );
+        }
+
+        // Genre filter
+        if (selectedGenres.length > 0) {
+            filtered = filtered.filter((movie: Movie) => {
+                if (Array.isArray(movie.genre)) {
+                    return (movie.genre as string[]).some(g => selectedGenres.includes(g));
+                } else if (typeof movie.genre === 'string') {
+                    return selectedGenres.includes(movie.genre);
+                }
+                return false;
+            });
+        }
+
+        // Year range filter
+        if (selectedYearRange) {
+            filtered = filtered.filter((movie: Movie) => {
+                if (movie.releaseDate) {
+                    const year = new Date(movie.releaseDate).getFullYear();
+                    return year >= selectedYearRange.min && year <= selectedYearRange.max;
+                }
+                return false;
+            });
+        }
+
+        // Rating range filter
+        if (selectedRatingRange) {
+            filtered = filtered.filter((movie: Movie) => {
+                if (movie.rating) {
+                    return movie.rating >= selectedRatingRange.min && movie.rating <= selectedRatingRange.max;
+                }
+                return false;
+            });
+        }
+
+        // Content type filter
+        if (selectedContentType !== 'all') {
+            filtered = filtered.filter((movie: Movie) => {
+                if (selectedContentType === 'series') {
+                    return movie.isSeries === true;
+                } else {
+                    return movie.isSeries !== true;
+                }
+            });
+        }
+
+        return filtered;
+    };
+
     const handleSearch = (query: string) => {
         setSearchQuery(query);
 
-        if (query.trim() === '') {
+        if (query.trim() === '' && selectedGenres.length === 0 && !selectedYearRange && !selectedRatingRange && selectedContentType === 'all') {
             setMovies([]);
             return;
         }
 
-        const filteredMovies = sampleMovies.filter((movie: Movie) =>
-            (movie.title?.toLowerCase().includes(query.toLowerCase()) ?? false) ||
-            (Array.isArray(movie.genre) && (movie.genre as string[]).some((g: string) => g.toLowerCase().includes(query.toLowerCase()))) ||
-            (movie.synopsis?.toLowerCase().includes(query.toLowerCase()) ?? false)
-        );
-
+        const filteredMovies = applyFilters(sampleMovies, query);
         setMovies(filteredMovies);
     };
 
+    // Update movies when filters change
+    const updateFilters = () => {
+        const filteredMovies = applyFilters(sampleMovies);
+        setMovies(filteredMovies);
+        setShowFilterModal(false);
+    };
+
+    // Clear all filters
+    const clearAllFilters = () => {
+        setSelectedGenres([]);
+        setSelectedYearRange(null);
+        setSelectedRatingRange(null);
+        setSelectedContentType('all');
+        if (searchQuery.trim() === '') {
+            setMovies([]);
+        } else {
+            const filteredMovies = applyFilters(sampleMovies);
+            setMovies(filteredMovies);
+        }
+    };
+
+    // Check if any filters are active
+    const hasActiveFilters = selectedGenres.length > 0 || selectedYearRange !== null || selectedRatingRange !== null || selectedContentType !== 'all';
+
     const handleMoviePress = (movie: Movie) => {
-        router.push(`/movie/${movie.id}?title=${movie.title}`);
+        router.push(`/movie/${movie.id}`);
     }
 
     // Update the movie's favorite status in the arrays
@@ -359,50 +476,314 @@ export default function SearchScreen() {
     }, []);
 
 
-return (
-    <View className='flex-1 bg-dark-bg' >
-        <AppHeader title='Search' />
-        <View className='flex-row items-center bg-[#192C40] mx-4 mt-3 rounded-full px-4 py-2'>
-            <Feather name="search" size={24} color="white" style={{ fontWeight: 'bold' }} />
-            <TextInput
-                className='text-white ml-3 flex-1 font-montserrat-medium py-2 focus-visible:outline-none'
-                placeholder="Search for movies, TV shows..."
-                placeholderTextColor="#666"
-                value={searchQuery}
-                onChangeText={handleSearch}
-                returnKeyType="search"
-            />
-            <Feather name="sliders" size={24} color="white" style={{ fontWeight: 'bold' }} />
-        </View>
+    return (
+        <View className="flex-1 bg-dark-bg">
+            <AppHeader title='Search' />
 
-        {/* Search Results: Displayed in using Flashlist with 2 col min */}
-        <ScrollView className="px-4 mt-4">
-            <FlashList
-                data={movies}
-                keyExtractor={(item: Movie) => item.id.toString()}
-                renderItem={({ item, index }: { item: Movie; index: number }) => (
-                    <View style={{
-                        flex: 1,
-                        marginLeft: index % 2 === 0 ? 0 : 8,
-                        marginRight: index % 2 === 0 ? 8 : 0
-                    }}>
-                        <MovieCard
-                            data={item}
-                            style={{ width: "100%" }}
-                            onPress={() => handleMoviePress(item)}
-                            onFavoritePress={() => handleFavoritePress(item)} />
+            {/* Search Bar */}
+            <View className="flex-row items-center bg-[#192C40] mx-4 mt-3 rounded-full px-4 py-2">
+                <Feather name="search" size={24} color="white" style={{ fontWeight: 'bold' }} />
+                <TextInput
+                    className="text-white ml-3 flex-1 font-montserrat-medium py-2 focus-visible:outline-none"
+                    placeholder="Search for movies, TV shows..."
+                    placeholderTextColor="#666"
+                    value={searchQuery}
+                    onChangeText={handleSearch}
+                    returnKeyType="search"
+                />
+                <TouchableOpacity
+                    onPress={() => setShowFilterModal(true)}
+                    className={`p-1 rounded-full ${hasActiveFilters ? 'bg-primary' : ''}`}
+                >
+                    <Feather
+                        name="sliders"
+                        size={24}
+                        color="white"
+                        style={{ fontWeight: 'bold' }}
+                    />
+                </TouchableOpacity>
+            </View>
+
+            {/* Active Filters Display - Tight spacing */}
+            {hasActiveFilters && (
+                <View className="mx-4 mt-1">
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className='py-2'
+                    >
+                        <View className="flex-row items-center gap-1.5">
+                            <TouchableOpacity
+                                onPress={clearAllFilters}
+                                className="bg-red-500/20 border border-red-500/50 rounded-xl px-2.5 py-0.5 flex-row items-center"
+                            >
+                                <Ionicons name="trash-bin" size={10} color="#EF4444" />
+                                <Text className="text-red-400 text-xs font-semibold ml-1">Clear All</Text>
+                            </TouchableOpacity>
+                            {selectedGenres.map((genre) => (
+                                <View key={genre} className="bg-primary/20 border border-primary/50 rounded-xl px-2 py-0.5 flex-row items-center">
+                                    <Ionicons name="color-palette" size={10} color="#9810FA" />
+                                    <Text className="text-primary text-xs font-semibold ml-1 mr-1">{genre}</Text>
+                                    <TouchableOpacity onPress={() => setSelectedGenres(prev => prev.filter(g => g !== genre))}>
+                                        <Ionicons name="close-circle" size={14} color="#9810FA" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+
+                            {selectedYearRange && (
+                                <View className="bg-primary/20 border border-primary/50 rounded-xl px-2 py-0.5 flex-row items-center">
+                                    <Ionicons name="calendar" size={10} color="#9810FA" />
+                                    <Text className="text-primary text-xs font-semibold ml-1 mr-1">
+                                        {yearRanges.find(r => r.min === selectedYearRange.min && r.max === selectedYearRange.max)?.label}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setSelectedYearRange(null)}>
+                                        <Ionicons name="close-circle" size={14} color="#9810FA" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {selectedRatingRange && (
+                                <View className="bg-primary/20 border border-primary/50 rounded-xl px-2 py-0.5 flex-row items-center">
+                                    <Ionicons name="star" size={10} color="#FFD700" />
+                                    <Text className="text-primary text-xs font-semibold ml-1 mr-1">
+                                        {ratingRanges.find(r => r.min === selectedRatingRange.min && r.max === selectedRatingRange.max)?.label}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setSelectedRatingRange(null)}>
+                                        <Ionicons name="close-circle" size={14} color="#9810FA" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {selectedContentType !== 'all' && (
+                                <View className="bg-primary/20 border border-primary/50 rounded-xl px-2 py-0.5 flex-row items-center">
+                                    <Ionicons
+                                        name={selectedContentType === 'movie' ? 'film' : 'tv'}
+                                        size={10}
+                                        color="#9810FA"
+                                    />
+                                    <Text className="text-primary text-xs font-semibold ml-1 mr-1">
+                                        {selectedContentType === 'movie' ? 'Movies' : 'Series'}
+                                    </Text>
+                                    <TouchableOpacity onPress={() => setSelectedContentType('all')}>
+                                        <Ionicons name="close-circle" size={14} color="#9810FA" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </ScrollView>
+                </View>
+            )}
+
+            {/* Search Results - Tight spacing */}
+            <View className="px-4 mt-1 flex-1">
+                <FlashList
+                    data={movies}
+                    keyExtractor={(item: Movie) => item.id.toString()}
+                    renderItem={({ item, index }: { item: Movie; index: number }) => (
+                        <View style={{
+                            flex: 1,
+                            marginLeft: index % numColumns === 0 ? 0 : 4,
+                            marginRight: index % numColumns === numColumns - 1 ? 0 : 4
+                        }}>
+                            <MovieCard
+                                data={item}
+                                style={{ width: "100%" }}
+                                onPress={() => handleMoviePress(item)}
+                                onFavoritePress={() => handleFavoritePress(item)} />
+                        </View>
+                    )}
+                    numColumns={numColumns}
+                    key={numColumns} // Force re-render when numColumns changes
+                    ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+                    ListEmptyComponent={() => (
+                        <View className="flex-1 items-center justify-center mt-10">
+                            <Text className="text-gray-400 font-montserrat-medium">No results found</Text>
+                        </View>
+                    )}
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                />
+            </View>
+
+            {/* Filter Modal */}
+            <Modal
+                visible={showFilterModal}
+                animationType="slide"
+                transparent={true}
+                className=''
+                onRequestClose={() => setShowFilterModal(false)}
+            >
+                <View className='flex-1 bg-black/50 backdrop-blur-sm justify-end'>
+                    <View className='max-w-[600px] max-h-[600px] self-center flex-1 rounded-t-xl bg-dark-bg'>
+                        {/* Modal Header */}
+                        <View className='flex-row items-center justify-between px-5 py-3 border-b-2 border-alt-bg'>
+                            <Text className='text-white text-lg' color='#FFFFFF' variant='h4' weight='bold' >Filters</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowFilterModal(false)}
+                                className='p-2'
+                            >
+                                <Ionicons name="close" size={24} color="white" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Scrollable Content */}
+                        <ScrollView
+                            className='flex-1'
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{ paddingBottom: 80 }}
+                        >
+
+                            {/* Content Type Filter - Test Section */}
+                            <View className='px-5 pt-4'>
+                                <Text className='text-lg mb-2' variant='h6' color='#FFFFFF' weight='semiBold'>
+                                    Content Type
+                                </Text>
+                                <View className='flex-row gap-2'>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedContentType('all')}
+                                        className='flex-1 px-4 py-3 rounded-lg items-center'
+                                        style={{
+                                            backgroundColor: selectedContentType === 'all' ? '#9810FA' : '#374151',
+                                        }}
+                                    >
+                                        <Text color="white" weight='semiBold' variant='small' >All</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedContentType('movie')}
+                                        className='flex-1 px-4 py-3 rounded-lg items-center'
+                                        style={{
+                                            backgroundColor: selectedContentType === 'movie' ? '#9810FA' : '#374151',
+                                        }}
+                                    >
+                                        <Text color="white" weight='semiBold' variant='small' >Movies</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedContentType('series')}
+                                        className='flex-1 px-4 py-3 rounded-lg items-center'
+                                        style={{
+                                            backgroundColor: selectedContentType === 'series' ? '#9810FA' : '#374151',
+                                        }}
+                                    >
+                                        <Text color="white" weight='semiBold' variant='small' >Series</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            {/* Genres Filter */}
+                            <View className='p-5'>
+                                <Text className='text-lg mb-2' variant='h6' color='#FFFFFF' weight='semiBold'>
+                                    Genres
+                                </Text>
+                                <View className='flex-1'>
+                                    <View className='flex-row flex-wrap gap-2'>
+                                        {availableGenres.map((genre) => (
+                                            <TouchableOpacity
+                                                key={genre}
+                                                onPress={() => {
+                                                    setSelectedGenres(prev =>
+                                                        prev.includes(genre)
+                                                            ? prev.filter(g => g !== genre)
+                                                            : [...prev, genre]
+                                                    );
+                                                }}
+                                                className={`px-3 py-2 rounded-full ${selectedGenres.includes(genre) ? 'bg-purple-600' : 'bg-gray-700'}`}
+                                            >
+                                                <Text color='white' weight='semiBold' variant='small'>
+                                                    {genre}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </View>
+                            </View>
+
+                            {/* Release Year Filter */}
+                            <View className='p-5'>
+                                <Text className='text-lg mb-2' variant='h6' color='#FFFFFF' weight='semiBold'>
+                                    Release Year
+                                </Text>
+                                <View className='flex-row flex-wrap gap-2'>
+                                    {yearRanges.map((range) => (
+                                        <TouchableOpacity
+                                            key={range.label}
+                                            onPress={() => {
+                                                if (selectedYearRange && selectedYearRange.min === range.min && selectedYearRange.max === range.max) {
+                                                    setSelectedYearRange(null);
+                                                } else {
+                                                    setSelectedYearRange({ min: range.min, max: range.max });
+                                                }
+                                            }}
+                                            className="px-3 py-2 rounded-lg flex-row items-center justify-between"
+                                            style={{
+                                                backgroundColor: selectedYearRange && selectedYearRange.min === range.min && selectedYearRange.max === range.max ? '#9810FA' : '#374151',
+                                            }}
+                                        >
+                                            <Text color='white' weight='semiBold' variant='small'>
+                                                {range.label}
+                                            </Text>
+                                            {selectedYearRange && selectedYearRange.min === range.min && selectedYearRange.max === range.max && (
+                                                <Ionicons name="checkmark" size={18} color="white" />
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                            {/* Rating Filter */}
+                            <View className='p-5'>
+                                <Text className='text-lg mb-2' variant='h6' color='#FFFFFF' weight='semiBold'>
+                                    Rating
+                                </Text>
+                                <View className='gap-2'>
+                                    {ratingRanges.map((range) => (
+                                        <TouchableOpacity
+                                            key={range.label}
+                                            onPress={() => {
+                                                if (selectedRatingRange && selectedRatingRange.min === range.min && selectedRatingRange.max === range.max) {
+                                                    setSelectedRatingRange(null);
+                                                } else {
+                                                    setSelectedRatingRange({ min: range.min, max: range.max });
+                                                }
+                                            }}
+                                            className={`py-3 px-4 rounded-lg flex-row items-center justify-between ${selectedRatingRange && selectedRatingRange.min === range.min && selectedRatingRange.max === range.max ? 'bg-purple-600' : 'bg-gray-700'}`}
+                                        >
+                                            <View className='flex-row items-center'>
+                                                <Text className={`text-white ${selectedRatingRange && selectedRatingRange.min === range.min && selectedRatingRange.max === range.max ? 'font-bold' : 'font-normal'}`}>
+                                                    {range.label}
+                                                </Text>
+                                                {range.min > 0 && range.min < 10 && (
+                                                    <View className='flex-row items-center ml-2'>
+                                                        {[...Array(Math.floor(range.min))].map((_, i) => (
+                                                            <Ionicons key={i} name="star" size={12} color="#FFD700" />
+                                                        ))}
+                                                    </View>
+                                                )}
+                                            </View>
+                                            {selectedRatingRange && selectedRatingRange.min === range.min && selectedRatingRange.max === range.max && (
+                                                <Ionicons name="checkmark" size={18} color="white" />
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                        </ScrollView>
+
+                        {/* Apply Button */}
+                        <View className='p-6 border-t-2 border-t-alt-bg'>
+                            <TouchableOpacity onPress={updateFilters} className='bg-primary p-4 rounded-md items-center'>
+                                <Text variant='h6' weight='bold' color="white">
+                                    Apply Filters {hasActiveFilters ? `(${selectedGenres.length +
+                                        (selectedYearRange ? 1 : 0) +
+                                        (selectedRatingRange ? 1 : 0) +
+                                        (selectedContentType !== 'all' ? 1 : 0)
+                                        })` : ''}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                )}
-                numColumns={2}
-                className='pb-24'
-                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-                ListEmptyComponent={() => (
-                    <View className="flex-1 items-center justify-center mt-10">
-                        <Text className="text-gray-400 font-montserrat-medium">No results found</Text>
-                    </View>
-                )}
-            />
-        </ScrollView>
-    </View>
-);
+                </View>
+            </Modal>
+
+        </View>
+    );
 }

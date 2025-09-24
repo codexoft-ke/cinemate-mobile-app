@@ -3,13 +3,11 @@ import { Text } from '@/components/ui/app-text';
 import SectionHeader from '@/components/ui/section-header';
 import { CineMateColors } from '@/constants/theme';
 import { Movie } from '@/types';
-import { getYear } from '@/utils';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { memo, useCallback, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, TextInput, View, TouchableOpacity } from 'react-native';
+import { Dimensions, Platform, Pressable, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -20,13 +18,6 @@ interface Category {
     name: string;
 }
 
-interface MovieSliderCardProps {
-    movie: Movie;
-    onPress?: () => void;
-    onFavoritePress?: () => void;
-    width?: number | string;
-    height?: number;
-}
 export default function HomeScreen() {
 
     const router = useRouter();
@@ -221,35 +212,94 @@ export default function HomeScreen() {
 
     const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([
         {
-            id: 1311031,
-            title: "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
-            poster: "https://image.tmdb.org/t/p/w500/1RgPyOhN4DRs225BGTlHJqCudII.jpg",
+            id: 278,
+            title: "The Shawshank Redemption",
+            poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
             isFavorite: false,
-            releaseDate: "2025-02-11",
-            subTitle: "12 Apr 2025",
-            duration: 67,
+            releaseDate: "1994-09-23",
+            genre: "Drama",
+            rating: 8.712
+        },
+        {
+            id: 238,
+            title: "The Godfather",
+            poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+            isFavorite: false,
+            releaseDate: "1972-03-24",
+            genre: "Drama",
+            rating: 8.685
+        },
+        {
+            id: 240,
+            title: "The Godfather Part II",
+            poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
+            isFavorite: false,
+            releaseDate: "1974-12-20",
+            genre: "Drama",
+            rating: 8.57
+        },
+        {
+            id: 424,
+            title: "Schindler's List",
+            poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
+            isFavorite: false,
+            releaseDate: "1993-12-15",
+            genre: "Drama",
+            rating: 8.566
+        },
+        {
+            id: 389,
+            title: "12 Angry Men",
+            poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
+            isFavorite: false,
+            releaseDate: "1957-04-10",
+            genre: "Drama",
+            rating: 8.549
+        },
+        {
+            id: 129,
+            title: "Spirited Away",
+            poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+            isFavorite: false,
+            releaseDate: "2002-09-20",
             genre: "Animation",
             rating: 8.5
         },
         {
-            id: 755898,
-            title: "War of the Worlds",
-            poster: "https://image.tmdb.org/t/p/w500/iZLqwEwUViJdSkGVjePGhxYzbDb.jpg",
-            isFavorite: true,
-            releaseDate: "2024-01-12",
-            subTitle: "12 Apr 2025",
-            genre: "Sci-Fi",
-            rating: 6.2
+            id: 155,
+            title: "The Dark Knight",
+            poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+            isFavorite: false,
+            releaseDate: "2008-07-18",
+            genre: "Drama",
+            rating: 8.523
         },
         {
-            id: 1078605,
-            title: "Weapons",
-            poster: "https://image.tmdb.org/t/p/w500/Q2OajDi2kcO6yErb1IAyVDTKMs.jpg",
+            id: 19404,
+            title: "Dilwale Dulhania Le Jayenge",
+            poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
             isFavorite: false,
-            releaseDate: "2024-06-14",
-            subTitle: "12 Apr 2025",
-            genre: "Action",
-            rating: 7.1
+            releaseDate: "1995-10-20",
+            genre: "Comedy",
+            rating: 8.5
+        },
+        {
+            id: 497,
+            title: "The Green Mile",
+            poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
+            isFavorite: false,
+            releaseDate: "1999-12-10",
+            genre: "Fantasy",
+            rating: 8.504
+        },
+        {
+            id: 496243,
+            title: "Parasite",
+            poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+            isFavorite: false,
+            releaseDate: "2019-10-11",
+            genre: "Comedy",
+            rating: 8.498
         }
     ]);
 
@@ -273,7 +323,7 @@ export default function HomeScreen() {
     }
 
     const handleMoviePress = (movie: Movie) => {
-        router.push(`/movie/${movie.id}?title=${movie.title}`);
+        router.push(`/movie/${movie.id}`);
     }
 
     // Update the movie's favorite status in the arrays
@@ -316,7 +366,7 @@ export default function HomeScreen() {
             default:
                 return;
         }
-    },[recommendation, trendingMovies, upcomingMovies]);
+    }, [recommendation, trendingMovies, upcomingMovies]);
 
     return (
         <ScrollView
@@ -375,14 +425,14 @@ export default function HomeScreen() {
                 <View>
                     <Carousel
                         width={screenWidth}
-                        height= {screenWidth*(9/16)}
+                        height={screenWidth * (9 / 16)}
                         data={trendingMovies}
                         renderItem={({ item }: { item: Movie }) => (
                             <View style={{ paddingHorizontal: 16, width: screenWidth }}>
                                 <MovieCard
                                     key={item.id}
                                     data={item}
-                                    style={{ width: "100%", height: screenWidth*(9/16), }}
+                                    style={{ width: "100%", height: screenWidth * (9 / 16), }}
                                     orientation='horizontal'
                                     onPress={() => handleMoviePress(item)}
                                     onFavoritePress={() => handleFavoritePress(item, "trending")}
@@ -427,9 +477,9 @@ export default function HomeScreen() {
                 />
                 <ScrollView
                     horizontal={true}
+                    contentContainerClassName={`pr-2 gap-3 ${Platform.OS === "web" && "overflow-x-scroll w-full custom-scrollbar"}`}
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingRight: 8, gap: 16 }}
-                    nestedScrollEnabled={true}
+                    scrollEnabled={false}
                 >
                     {recommendation.map((item, index) => (
                         <View
@@ -455,22 +505,30 @@ export default function HomeScreen() {
                 <ScrollView
                     horizontal={true}
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingRight: 8, gap: 16 }}
+                    contentContainerClassName={`pr-2 gap-3 ${Platform.OS === "web" && "overflow-x-scroll w-full custom-scrollbar"}`}
                     nestedScrollEnabled={true}
                 >
-                    {upcomingMovies.map((item, index) => (
-                        <View
-                            key={index}
-                            className='w-36'
-                        >
-                            <MovieCard
-                                data={item}
-                                orientation='vertical'
-                                onPress={() => handleMoviePress(item)}
-                                onFavoritePress={() => handleFavoritePress(item, "upcoming")}
-                            />
-                        </View>
-                    ))}
+                    {upcomingMovies.map((item, index) => {
+                        const formatedDate = item?.releaseDate ? new Date(item?.releaseDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        }) : "Unknown";
+                        const movie = { ...item, subTitle: `On: ${formatedDate}` };
+                        return (
+                            <View
+                                key={index}
+                                className='w-36'
+                            >
+                                <MovieCard
+                                    data={movie}
+                                    orientation='vertical'
+                                    onPress={() => handleMoviePress(item)}
+                                    onFavoritePress={() => handleFavoritePress(item, "upcoming")}
+                                />
+                            </View>)
+                    }
+                    )}
                 </ScrollView>
             </View>
         </ScrollView>
@@ -492,88 +550,5 @@ const CategoryCard = memo(function CategoryCard({ data }: { data: Category }) {
         >
             <Text className="text-white text-xs" variant='smallMedium' weight='medium'>{data.name}</Text>
         </Pressable>
-    );
-});
-
-
-const MovieSliderCard = memo(function MovieSliderCard({
-    movie,
-    onPress,
-    onFavoritePress,
-    width = screenWidth - 32,
-    height = 200
-}: MovieSliderCardProps) {
-
-    // Memoize the gradient colors to prevent re-creation
-    const gradientColors = React.useMemo(() => ['transparent', 'rgba(0,0,0,0.9)'] as const, []);
-
-    // Memoize the gradient style to prevent re-creation
-    const gradientStyle = React.useMemo(() => ({
-        position: 'absolute' as const,
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '60%' as const
-    }), []);
-
-    return (
-        <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={onPress}
-            style={{ width: width as number, height: height as number }}
-        >
-            <View
-                className="w-full rounded-xl overflow-hidden bg-gray-800 shadow-lg"
-                style={{ height }}
-            >
-                <View className="relative w-full h-full">
-                    <Image
-                        source={{ uri: movie.poster }}
-                        style={{ width: '100%', height: '100%' }}
-                        contentFit="cover"
-                        placeholder="https://via.placeholder.com/500x750?text=Loading..."
-                    />
-
-                    {/* Gradient overlay for better text readability */}
-                    <LinearGradient
-                        colors={gradientColors}
-                        style={gradientStyle}
-                    />
-
-                    {/* Favorite button */}
-                    <TouchableOpacity
-                        className="absolute top-3 right-3 bg-[#192C40] backdrop-blur-sm p-2 rounded-sm"
-                        onPress={onFavoritePress}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons
-                            name={movie.isFavorite ? "heart" : "heart-outline"}
-                            size={20}
-                            color={movie.isFavorite ? "#ef4444" : "white"}
-                        />
-                    </TouchableOpacity>
-
-                    {/* Movie info overlay */}
-                    <View className="absolute bottom-0 left-0 right-0 p-4">
-                        <Text
-                            className="text-white text-lg mb-1"
-                            variant='h6'
-                            weight='bold'
-                            numberOfLines={2}
-                        >
-                            {movie.title}
-                        </Text>
-                        <View className="flex-row items-center">
-                            <Feather name="star" size={14} color="#fbbf24" />
-                            <Text className="text-gray-300 text-sm ml-1">{movie.rating}</Text>
-                            <Text className="text-gray-400 text-sm ml-3">•</Text>
-                            <Text className="text-gray-400 text-sm ml-1">{movie.genre}</Text>
-                            <Text className="text-gray-400 text-sm ml-3">•</Text>
-                            <Text className="text-gray-400 text-sm ml-1">{movie.releaseDate ? getYear(movie.releaseDate) : 'Unknown'}</Text>
-                        </View>
-                    </View>
-                </View>
-            </View>
-        </TouchableOpacity>
     );
 });

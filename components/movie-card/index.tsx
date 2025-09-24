@@ -137,7 +137,7 @@ const MovieCard = memo(function MovieCard({
                                 numberOfLines={2}
                                 weight="semiBold"
                             >
-                                On: {data.subTitle}
+                                {data.subTitle}
                             </Text>
                         )}
 

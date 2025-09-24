@@ -4,8 +4,8 @@ import { Text } from '@/components/ui/app-text';
 import { Movie } from '@/types';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Dimensions, View } from 'react-native';
 
 export default function Favourites() {
 
@@ -103,8 +103,20 @@ export default function Favourites() {
         }
     ]);
 
+    // Calculate number of columns based on screen width
+    const screenWidth = Dimensions.get('window').width;
+    const cardWidth = 150; // Minimum card width
+    const padding = 32; // Total horizontal padding (16px on each side)
+    const spacing = 8; // Space between cards
+    
+    const numColumns = useMemo(() => {
+        const availableWidth = screenWidth - padding;
+        const columns = Math.floor(availableWidth / (cardWidth + spacing));
+        return Math.max(2, columns); // Minimum 2 columns
+    }, [screenWidth]);
+
     const handleMoviePress = (movie: Movie) => {
-        router.push(`/movie/${movie.id}?title=${movie.title}`);
+        router.push(`/movie/${movie.id}`);
     }
 
     // Update the movie's favorite status in the arrays
@@ -115,20 +127,20 @@ export default function Favourites() {
             const previousData = prev;
             return previousData.filter((movies)=>movie.id !== movies.id);
         })
-    }, []);
+    }, [favourites]);
     return (
         <View className='flex-1 bg-dark-bg'>
             <AppHeader title='Favourites' />
 
-            <ScrollView className="px-4 mt-4">
+            <View className="px-4 mt-4 flex-1">
                 <FlashList
                     data={favourites}
                     keyExtractor={(item: Movie) => item.id.toString()}
                     renderItem={({ item, index }: { item: Movie; index: number }) => (
                         <View style={{
                             flex: 1,
-                            marginLeft: index % 2 === 0 ? 0 : 8,
-                            marginRight: index % 2 === 0 ? 8 : 0
+                            marginLeft: index % numColumns === 0 ? 0 : 4,
+                            marginRight: index % numColumns === numColumns - 1 ? 0 : 4
                         }}>
                             <MovieCard
                                 data={item}
@@ -137,16 +149,18 @@ export default function Favourites() {
                                 onFavoritePress={() => handleFavoritePress(item)} />
                         </View>
                     )}
-                    numColumns={2}
-                    className='pb-24'
-                    ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+                    numColumns={numColumns}
+                    key={numColumns} // Force re-render when numColumns changes
+                    ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
                     ListEmptyComponent={() => (
                         <View className="flex-1 items-center justify-center mt-10">
                             <Text className="text-gray-400 font-montserrat-medium">No results found</Text>
                         </View>
                     )}
+                    contentContainerClassName='pb-10 custom-scrollbar'
+                    contentContainerStyle={{ paddingBottom: 100 }}
                 />
-            </ScrollView>
+            </View>
         </View>
     );
 }

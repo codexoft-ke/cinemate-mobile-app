@@ -27,7 +27,7 @@ export function AppHeader({
     leftIcon,
     rightIcon,
     showLeftIcon = true,
-    showRightIcon = false,
+    showRightIcon = true,
     onLeftPress,
     onRightPress,
     className,
@@ -68,7 +68,7 @@ export function AppHeader({
                 borderBottomWidth: showBorder ? 1 : 0,
                 borderBottomColor: Colors.dark.border,
             }}
-            className={`px-4 pb-4 ${className}`}
+            className={`px-4 ${className}`}
         >
             <View className="flex-row justify-between items-center min-h-[60px]">
                 {/* Left Section */}

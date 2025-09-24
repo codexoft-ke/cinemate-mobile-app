@@ -45,7 +45,7 @@ export default function ProfileScreen() {
             icon: 'info',
             type: 'route',
             title: 'About App',
-            route: '/profile/about-app',
+            route: 'about-app',
         },
         {
             id: 5,

@@ -1,12 +1,16 @@
 import { AppHeader } from "@/components/ui/app-header";
 import { Text } from "@/components/ui/app-text";
 import { CineMateColors } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { getFieldError, getValidationErrors } from "@/hooks/use-api";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import { useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     Platform,
     ScrollView,
     TextInput,
@@ -15,17 +19,109 @@ import {
 } from "react-native";
 
 export default function SignIn() {
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSignIn = () => {
+    const [inputErrors, setInputErrors] = useState({
+        email: {
+            error: false,
+            message: ""
+        },
+        password: {
+            error: false,
+            message: ""
+        }
+    });
+
+    const clearInputErrors = () => {
+        setInputErrors({
+            email: { error: false, message: "" },
+            password: { error: false, message: "" },
+        });
+    };
+
+    const validateInputs = () => {
+        const errors = {
+            email: {
+                error: !email || !/\S+@\S+\.\S+/.test(email),
+                message: !email ? "Email is required" : !/\S+@\S+\.\S+/.test(email) ? "Please enter a valid email" : ""
+            },
+            password: {
+                error: !password,
+                message: !password ? "Password is required" : ""
+            }
+        };
+        
+        setInputErrors(errors);
+        return !errors.email.error && !errors.password.error;
+    };
+
+    const handleSignIn = async () => {
         if (Platform.OS === 'ios') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
-        // Here you would typically handle authentication
-        // For now, just navigate to the main app
-        router.replace('/(app)/(tabs)');
+
+        if (!validateInputs()) {
+            return;
+        }
+
+        setIsLoading(true);
+        clearInputErrors(); // Clear any previous errors
+        
+        try {
+            await login({ email, password });
+            // Navigation is handled automatically by AuthContext after successful login
+        } catch (error: any) {
+            // Check if it's a validation error (ApiError with validation details)
+            if (error && !error.success && error.error?.details) {
+                const validationErrors = getValidationErrors(error);
+                
+                if (validationErrors) {
+                    // Update form errors with server validation
+                    const updatedErrors = { ...inputErrors };
+                    
+                    // Map server field names to form field names
+                    const fieldMapping: { [key: string]: keyof typeof updatedErrors } = {
+                        'email': 'email',
+                        'password': 'password'
+                    };
+                    
+                    Object.keys(validationErrors).forEach(field => {
+                        const formField = fieldMapping[field] || field as keyof typeof updatedErrors;
+                        if (updatedErrors[formField]) {
+                            const fieldError = getFieldError(error, field);
+                            if (fieldError) {
+                                updatedErrors[formField] = {
+                                    error: true,
+                                    message: fieldError
+                                };
+                            }
+                        }
+                    });
+                    
+                    setInputErrors(updatedErrors);
+                } else {
+                    // Fallback to generic error
+                    Alert.alert(
+                        'Sign In Failed',
+                        error.message || 'Validation failed. Please check your inputs.',
+                        [{ text: 'OK' }]
+                    );
+                }
+            } else {
+                // Show generic error alert for non-validation errors
+                Alert.alert(
+                    'Sign In Failed',
+                    error.message || 'An error occurred during sign in. Please try again.',
+                    [{ text: 'OK' }]
+                );
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -45,8 +141,8 @@ export default function SignIn() {
                 <View className="items-center pt-2 pb-8">
                     <Image
                         style={{
-                            width: 80,
-                            height: 80,
+                            width: 150,
+                            height: 150,
                         }}
                         source={require("@/assets/images/logo.png")}
                     />
@@ -78,8 +174,15 @@ export default function SignIn() {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             autoComplete="email"
-                            className="font-medium bg-alt-bg text-white text-base rounded-md px-4 py-5 border border-transparent"
+                            className={`font-medium bg-alt-bg text-white text-base rounded-md px-4 py-5 border ${inputErrors.email.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                         />
+                        {inputErrors.email.error && (
+                            <View className="pt-2">
+                                <Text color="red" weight="semiBold">
+                                    {inputErrors.email.message}
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Password Input */}
@@ -95,7 +198,7 @@ export default function SignIn() {
                                 placeholderTextColor={CineMateColors.textSecondary}
                                 secureTextEntry={!showPassword}
                                 autoComplete="password"
-                                className="font-medium bg-alt-bg text-white text-base rounded-md px-4 py-5 border border-transparent"
+                                className={`font-medium bg-alt-bg text-white text-base rounded-md px-4 py-5 border ${inputErrors.password.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                             />
                             <TouchableOpacity
                                 onPress={() => {
@@ -114,6 +217,13 @@ export default function SignIn() {
                                 />
                             </TouchableOpacity>
                         </View>
+                        {inputErrors.password.error && (
+                            <View className="pt-2">
+                                <Text color="red" weight="semiBold">
+                                    {inputErrors.password.message}
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Forgot Password */}
@@ -127,8 +237,9 @@ export default function SignIn() {
                     <TouchableOpacity
                         onPress={handleSignIn}
                         activeOpacity={0.8}
+                        disabled={isLoading}
                         style={{
-                            backgroundColor: CineMateColors.primary,
+                            backgroundColor: isLoading ? CineMateColors.textSecondary : CineMateColors.primary,
                             paddingVertical: 16,
                             borderRadius: 12,
                             marginBottom: 24,
@@ -140,10 +251,20 @@ export default function SignIn() {
                             shadowOpacity: 0.3,
                             shadowRadius: 8,
                             elevation: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}
                     >
+                        {isLoading && (
+                            <ActivityIndicator 
+                                color="#FFFFFF" 
+                                size="small" 
+                                style={{ marginRight: 8 }}
+                            />
+                        )}
                         <Text className="text-center" weight="semiBold" variant="h5" color="#FFFFFF">
-                            Sign In
+                            {isLoading ? 'Signing In...' : 'Sign In'}
                         </Text>
                     </TouchableOpacity>
 

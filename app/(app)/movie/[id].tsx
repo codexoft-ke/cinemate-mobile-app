@@ -376,10 +376,11 @@ export default function MovieInfo() {
 
     const handleModalRequestClose = useCallback(() => {
         // On web, prevent automatic modal closure from system events
-        // Only allow explicit close via close button
+        // On mobile, allow normal back gesture/hardware back button behavior
         if (Platform.OS === 'web') {
-            return;
+            return; // Only allow explicit close via close button on web
         }
+        // Mobile: Allow standard modal dismissal (back gesture, etc.)
         handleCloseVideoModal();
     }, [handleCloseVideoModal]);
 
@@ -693,8 +694,13 @@ export default function MovieInfo() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Video Player Container - Prevent touch propagation */}
-                    <View className="flex-1" style={{ pointerEvents: 'box-none' }}>
+                    {/* Video Player Container - Platform-specific touch handling */}
+                    <View 
+                        className="flex-1" 
+                        style={{ 
+                            pointerEvents: Platform.OS === 'web' ? 'box-none' : 'auto' 
+                        }}
+                    >
                         {selectedVideo?.key && (
                             <EmbeddedVideoPlayer videoKey={String(selectedVideo.key)} />
                         )}
@@ -795,13 +801,21 @@ const EmbeddedVideoPlayer = memo(({ videoKey }: { videoKey: string }) => {
                 <WebViewComponent
                     source={{ uri: embedUrl }}
                     style={{ flex: 1 }}
-                    allowsInlineMediaPlayback
+                    allowsInlineMediaPlayback={true}
                     mediaPlaybackRequiresUserAction={false}
-                    javaScriptEnabled
-                    domStorageEnabled
-                    startInLoadingState
-                    scalesPageToFit
-                    allowsFullscreenVideo
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    startInLoadingState={true}
+                    scalesPageToFit={true}
+                    allowsFullscreenVideo={true}
+                    mixedContentMode="compatibility"
+                    userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15"
+                    onLoadStart={() => console.log('WebView loading started')}
+                    onLoadEnd={() => console.log('WebView loading ended')}
+                    onError={(syntheticEvent: any) => {
+                        const { nativeEvent } = syntheticEvent;
+                        console.warn('WebView error: ', nativeEvent);
+                    }}
                 />
             );
         }

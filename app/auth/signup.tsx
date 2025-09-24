@@ -1,12 +1,18 @@
 import { AppHeader } from "@/components/ui/app-header";
 import { Text } from "@/components/ui/app-text";
 import { CineMateColors } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { getFieldError, getValidationErrors, useMovies } from "@/hooks/use-api";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
-import { useState } from 'react';
+import { Link } from "expo-router";
+import { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    Modal,
     Platform,
     ScrollView,
     TextInput,
@@ -14,21 +20,255 @@ import {
     View
 } from "react-native";
 
+const { width: screenWidth } = Dimensions.get('window');
+
+interface Genre {
+    id: string;
+    name: string;
+}
+
+const genreColors: { [key: string]: string } = {
+    'Action': CineMateColors.action,
+    'Comedy': CineMateColors.comedy,
+    'Drama': CineMateColors.drama,
+    'Horror': CineMateColors.horror,
+    'Romance': CineMateColors.romance,
+    'Sci-Fi': CineMateColors.sciFi,
+    'Thriller': CineMateColors.thriller,
+    'Adventure': '#FF6B35',
+    'Animation': '#4ECDC4',
+    'Crime': '#556B2F',
+    'Documentary': '#CD853F',
+    'Family': '#FFB6C1',
+    'Fantasy': '#9370DB',
+    'History': '#8B4513',
+    'Music': '#FF1493',
+    'Mystery': '#2F4F4F',
+    'War': '#800000',
+    'Western': '#DAA520',
+};
+
 export default function SignUp() {
+    const { signup } = useAuth();
+    
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    
+    // Genre selection state
+    const [genres, setGenres] = useState<Genre[]>([{
+        id: '1',
+        name: 'Action'
+    },
+    {
+        id: '2',
+        name: 'Comedy'
+    },
+    {
+        id: '3',
+        name: 'Drama'
+    },
+    {
+        id: '4',
+        name: 'Horror'
+    },
+    {
+        id: '5',
+        name: 'Romance'
+    },
+    {
+        id: '6',
+        name: 'Sci-Fi'
+    },
+    {
+        id: '7',
+        name: 'Thriller'
+    }
+]);
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+    const [showGenreModal, setShowGenreModal] = useState(false);
+    const [loadingGenres, setLoadingGenres] = useState(false);
 
-    const handleSignUp = () => {
+    // Fetch genres when component mounts
+    useEffect(() => {
+        fetchGenres();
+    }, []);
+
+    const fetchGenres = async () => {
+        setLoadingGenres(true);
+        try {
+            const response = await useMovies.genres();
+            if (response.success && 'data' in response) {
+                const data = response.data as { genres: Genre[] };
+                setGenres(data.genres || []);
+            }
+        } catch (error) {
+            console.error('Error fetching genres:', error);
+            Alert.alert('Error', 'Failed to load genres. Please try again.');
+        } finally {
+            setLoadingGenres(false);
+        }
+    };
+
+    const toggleGenreSelection = (genreId: string) => {
+        if (Platform.OS === 'ios') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        
+        setSelectedGenres(prev => 
+            prev.includes(genreId) 
+                ? prev.filter(id => id !== genreId)
+                : [...prev, genreId]
+        );
+    };
+
+    const getGenreColor = (genreName: string): string => {
+        return genreColors[genreName] || CineMateColors.primary;
+    };
+
+    const [inputErrors, setInputErrors] = useState({
+        name: {
+            error: false,
+            message: ""
+        },
+        email: {
+            error: false,
+            message: ""
+        },
+        email_address: {
+            error: false,
+            message: ""
+        },
+        password: {
+            error: false,
+            message: ""
+        },
+        c_password: {
+            error: false,
+            message: ""
+        },
+    });
+
+    const clearInputErrors = () => {
+        setInputErrors({
+            name: { error: false, message: "" },
+            email: { error: false, message: "" },
+            email_address: { error: false, message: "" },
+            password: { error: false, message: "" },
+            c_password: { error: false, message: "" },
+        });
+    };
+
+    const validateInputs = () => {
+        const errors = {
+            name: {
+                error: !name || name.length < 2,
+                message: !name ? "Name is required" : name.length < 2 ? "Name must be at least 2 characters" : ""
+            },
+            email: {
+                error: !email || !/\S+@\S+\.\S+/.test(email),
+                message: !email ? "Email is required" : !/\S+@\S+\.\S+/.test(email) ? "Please enter a valid email" : ""
+            },
+            email_address: {
+                error: false,
+                message: ""
+            },
+            password: {
+                error: !password || password.length < 8,
+                message: !password ? "Password is required" : password.length < 8 ? "Password must be at least 8 characters" : ""
+            },
+            c_password: {
+                error: !confirmPassword || confirmPassword !== password,
+                message: !confirmPassword ? "Please confirm your password" : confirmPassword !== password ? "Passwords don't match" : ""
+            }
+        };
+        
+        setInputErrors(errors);
+        return !errors.name.error && !errors.email.error && !errors.email_address.error && !errors.password.error && !errors.c_password.error;
+    };
+
+    const handleSignUp = async () => {
         if (Platform.OS === 'ios') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
-        // Here you would typically handle registration
-        // For now, just navigate to the main app
-        router.replace('/(app)/(tabs)');
+
+        if (!validateInputs()) {
+            return;
+        }
+
+        if (selectedGenres.length === 0) {
+            Alert.alert(
+                'Select Genres',
+                'Please select at least one favorite genre to personalize your movie recommendations.',
+                [{ text: 'OK', onPress: () => setShowGenreModal(true) }]
+            );
+            return;
+        }
+
+        setIsLoading(true);
+        clearInputErrors(); // Clear any previous errors
+        
+        try {
+            await signup({ 
+                email, 
+                password, 
+                name,
+                genres: selectedGenres
+            });
+            // Navigation is handled automatically by AuthContext after successful signup
+        } catch (error: any) {
+            // Check if it's a validation error (ApiError with validation details)
+            if (error && !error.success && error.error?.details) {
+                const validationErrors = getValidationErrors(error);
+                
+                if (validationErrors) {
+                    // Update form errors with server validation
+                    const updatedErrors = { ...inputErrors };
+                    
+                    // Map server field names to form field names
+                    const fieldMapping: { [key: string]: keyof typeof updatedErrors } = {
+                        'email': 'email_address', // Django uses 'email', form uses 'email_address' for display
+                        'name': 'name',
+                        'password': 'password'
+                    };
+                    
+                    Object.keys(validationErrors).forEach(field => {
+                        const formField = fieldMapping[field] || field as keyof typeof updatedErrors;
+                        if (updatedErrors[formField]) {
+                            const fieldError = getFieldError(error, field);
+                            if (fieldError) {
+                                updatedErrors[formField] = {
+                                    error: true,
+                                    message: fieldError
+                                };
+                            }
+                        }
+                    });
+                    
+                    setInputErrors(updatedErrors);
+                } else {
+                    // Fallback to generic error
+                    Alert.alert(
+                        'Sign Up Failed',
+                        error.message || 'Validation failed. Please check your inputs.',
+                        [{ text: 'OK' }]
+                    );
+                }
+            } else {
+                // Show generic error alert for non-validation errors
+                Alert.alert(
+                    'Sign Up Failed',
+                    error.message || 'An error occurred during sign up. Please try again.',
+                    [{ text: 'OK' }]
+                );
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -48,8 +288,8 @@ export default function SignUp() {
                 <View className="items-center pt-2 pb-8">
                     <Image
                         style={{
-                            width: 80,
-                            height: 80,
+                            width: 150,
+                            height: 150,
                         }}
                         source={require("@/assets/images/logo.png")}
                     />
@@ -79,8 +319,15 @@ export default function SignUp() {
                             placeholder="Enter your full name"
                             placeholderTextColor={CineMateColors.textSecondary}
                             autoComplete="name"
-                            className="font-medium bg-alt-bg text-white text-base rounded-md p-4 border border-transparent"
+                            className={`font-medium bg-alt-bg text-white text-base rounded-md p-4 border ${inputErrors.name.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                         />
+                        {inputErrors.name.error && (
+                            <View className="pt-2">
+                                <Text color="red" weight="semiBold">
+                                    {inputErrors.name.message}
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Email Input */}
@@ -95,8 +342,15 @@ export default function SignUp() {
                             placeholderTextColor={CineMateColors.textSecondary}
                             autoCapitalize="none"
                             autoComplete="email"
-                            className="font-medium bg-alt-bg text-white text-base rounded-md p-4 border border-transparent"
+                            className={`font-medium bg-alt-bg text-white text-base rounded-md p-4 border ${inputErrors.email.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                         />
+                        {inputErrors.email.error && (
+                            <View className="pt-2">
+                                <Text color="red" weight="semiBold">
+                                    {inputErrors.email.message}
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Password Input */}
@@ -112,7 +366,7 @@ export default function SignUp() {
                                 placeholderTextColor={CineMateColors.textSecondary}
                                 secureTextEntry={!showPassword}
                                 autoComplete="new-password"
-                                className="font-medium bg-alt-bg text-white text-base rounded-md p-4 border border-transparent"
+                                className={`font-medium bg-alt-bg text-white text-base rounded-md p-4 border ${inputErrors.password.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                             />
                             <TouchableOpacity
                                 onPress={() => {
@@ -131,6 +385,13 @@ export default function SignUp() {
                                 />
                             </TouchableOpacity>
                         </View>
+                        {inputErrors.password.error && (
+                            <View className="pt-2">
+                                <Text color="red" weight="semiBold">
+                                    {inputErrors.password.message}
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Confirm Password Input */}
@@ -146,7 +407,7 @@ export default function SignUp() {
                                 placeholderTextColor={CineMateColors.textSecondary}
                                 secureTextEntry={!showConfirmPassword}
                                 autoComplete="new-password"
-                                className="font-medium bg-alt-bg text-white text-base rounded-md p-4 border border-transparent"
+                                className={`font-medium bg-alt-bg text-white text-base rounded-md p-4 border ${inputErrors.c_password.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                             />
                             <TouchableOpacity
                                 onPress={() => {
@@ -165,14 +426,94 @@ export default function SignUp() {
                                 />
                             </TouchableOpacity>
                         </View>
+                        {inputErrors.c_password.error && (
+                            <View className="pt-2">
+                                <Text color="red" weight="semiBold">
+                                    {inputErrors.c_password.message}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Genre Selection */}
+                    <View className="mb-6">
+                        <Text color="#FFFFFF" variant="body" weight="medium" className="mb-3">
+                            Favorite Genres
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (Platform.OS === 'ios') {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                }
+                                setShowGenreModal(true);
+                            }}
+                            className="bg-alt-bg rounded-md p-4 border border-transparent"
+                            style={{ minHeight: 56 }}
+                            disabled={loadingGenres}
+                        >
+                            {loadingGenres ? (
+                                <View className="flex-row items-center">
+                                    <ActivityIndicator size="small" color={CineMateColors.textSecondary} />
+                                    <Text color={CineMateColors.textSecondary} variant="body" className="ml-3">
+                                        Loading genres...
+                                    </Text>
+                                </View>
+                            ) : selectedGenres.length === 0 ? (
+                                <View className="flex-row items-center">
+                                    <Text color={CineMateColors.textSecondary} variant="body" className="flex-1">
+                                        Select your favorite genres
+                                    </Text>
+                                    <Feather name="chevron-right" size={20} color={CineMateColors.textSecondary} />
+                                </View>
+                            ) : (
+                                <View>
+                                    <View className="flex-row flex-wrap">
+                                        {selectedGenres.slice(0, 3).map((genreId) => {
+                                            const genre = genres.find(g => g.id === genreId);
+                                            return genre ? (
+                                                <View
+                                                    key={genreId}
+                                                    className="rounded-full px-3 py-1 mr-2 mb-2"
+                                                    style={{ backgroundColor: `${getGenreColor(genre.name)}20` }}
+                                                >
+                                                    <Text
+                                                        variant="caption"
+                                                        weight="medium"
+                                                        style={{ color: getGenreColor(genre.name) }}
+                                                    >
+                                                        {genre.name}
+                                                    </Text>
+                                                </View>
+                                            ) : null;
+                                        })}
+                                    </View>
+                                    {selectedGenres.length > 3 && (
+                                        <Text color={CineMateColors.textSecondary} variant="caption" className="mt-1">
+                                            +{selectedGenres.length - 3} more selected
+                                        </Text>
+                                    )}
+                                    <View className="absolute top-0 right-0 mt-2 mr-2">
+                                        <Feather name="edit-2" size={16} color={CineMateColors.textSecondary} />
+                                    </View>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                        {selectedGenres.length === 0 && (
+                            <View className="pt-2">
+                                <Text color={CineMateColors.textSecondary} variant="caption">
+                                    Help us personalize your movie recommendations
+                                </Text>
+                            </View>
+                        )}
                     </View>
 
                     {/* Sign Up Button */}
                     <TouchableOpacity
                         onPress={handleSignUp}
                         activeOpacity={0.8}
+                        disabled={isLoading}
                         style={{
-                            backgroundColor: CineMateColors.primary,
+                            backgroundColor: isLoading ? CineMateColors.textSecondary : CineMateColors.primary,
                             paddingVertical: 16,
                             borderRadius: 12,
                             marginBottom: 24,
@@ -184,10 +525,20 @@ export default function SignUp() {
                             shadowOpacity: 0.3,
                             shadowRadius: 8,
                             elevation: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}
                     >
+                        {isLoading && (
+                            <ActivityIndicator 
+                                color="#FFFFFF" 
+                                size="small" 
+                                style={{ marginRight: 8 }}
+                            />
+                        )}
                         <Text className="text-center" weight="semiBold" variant="h5" color="#FFFFFF">
-                            Create Account
+                            {isLoading ? 'Creating Account...' : 'Create Account'}
                         </Text>
                     </TouchableOpacity>
 
@@ -205,6 +556,135 @@ export default function SignUp() {
                 {/* Bottom spacing */}
                 <View className="h-8" />
             </ScrollView>
+
+            {/* Genre Selection Modal */}
+            <Modal
+                visible={showGenreModal}
+                animationType="slide"
+                presentationStyle="formSheet"
+                onRequestClose={() => setShowGenreModal(false)}
+            >
+                <View className="flex-1 bg-dark-bg">
+                    <View className="flex-row items-center justify-between p-4 border-b border-alt-bg">
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (Platform.OS === 'ios') {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                }
+                                setShowGenreModal(false);
+                            }}
+                        >
+                            <Text color={CineMateColors.primary} variant="body" weight="medium">
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <Text color="#FFFFFF" variant="h6" weight="semiBold">
+                            Select Genres
+                        </Text>
+                        
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (Platform.OS === 'ios') {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                }
+                                setShowGenreModal(false);
+                            }}
+                            disabled={selectedGenres.length === 0}
+                            style={{ opacity: selectedGenres.length === 0 ? 0.5 : 1 }}
+                        >
+                            <Text color={CineMateColors.primary} variant="body" weight="semiBold">
+                                Done ({selectedGenres.length})
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <ScrollView className="flex-1 p-4">
+                        <Text color={CineMateColors.textSecondary} variant="body" className="mb-6 text-center">
+                            Choose your favorite movie genres to get personalized recommendations
+                        </Text>
+
+                        {loadingGenres ? (
+                            <View className="flex-1 items-center justify-center">
+                                <ActivityIndicator size="large" color={CineMateColors.primary} />
+                                <Text color={CineMateColors.textSecondary} variant="body" className="mt-4">
+                                    Loading genres...
+                                </Text>
+                            </View>
+                        ) : (
+                            <View className="flex-row flex-wrap justify-between">
+                                {genres.map((item) => {
+                                    const isSelected = selectedGenres.includes(item.id);
+                                    const genreColor = getGenreColor(item.name);
+                                    
+                                    return (
+                                        <TouchableOpacity
+                                            key={item.id}
+                                            style={{
+                                                width: (screenWidth - 48) / 2 - 8,
+                                                marginBottom: 16,
+                                                backgroundColor: isSelected ? `${genreColor}20` : CineMateColors.altBg,
+                                                borderRadius: 12,
+                                                padding: 16,
+                                                borderWidth: 2,
+                                                borderColor: isSelected ? genreColor : 'transparent',
+                                            }}
+                                            onPress={() => toggleGenreSelection(item.id)}
+                                            activeOpacity={0.8}
+                                        >
+                                            <View className="items-center">
+                                                <View
+                                                    className="w-12 h-12 rounded-full items-center justify-center mb-3"
+                                                    style={{ backgroundColor: genreColor }}
+                                                >
+                                                    <Feather
+                                                        name={getGenreIcon(item.name)}
+                                                        size={24}
+                                                        color="#FFFFFF"
+                                                    />
+                                                </View>
+                                                <Text
+                                                    variant="body"
+                                                    weight={isSelected ? "semiBold" : "medium"}
+                                                    color={isSelected ? genreColor : "#FFFFFF"}
+                                                    className="text-center"
+                                                >
+                                                    {item.name}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        )}
+                    </ScrollView>
+                </View>
+            </Modal>
         </View>
     );
 }
+
+const getGenreIcon = (genreName: string): keyof typeof Feather.glyphMap => {
+    const iconMap: { [key: string]: keyof typeof Feather.glyphMap } = {
+        'Action': 'zap',
+        'Comedy': 'smile',
+        'Drama': 'heart',
+        'Horror': 'eye',
+        'Romance': 'heart',
+        'Sci-Fi': 'cpu',
+        'Thriller': 'alert-triangle',
+        'Adventure': 'map',
+        'Animation': 'film',
+        'Crime': 'shield',
+        'Documentary': 'camera',
+        'Family': 'home',
+        'Fantasy': 'star',
+        'History': 'clock',
+        'Music': 'music',
+        'Mystery': 'help-circle',
+        'War': 'crosshair',
+        'Western': 'sun',
+    };
+    
+    return iconMap[genreName] || 'film';
+};

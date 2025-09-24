@@ -1,14 +1,37 @@
 import { Text } from "@/components/ui/app-text";
 import { CineMateColors } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
 import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
-import { Dimensions, Platform, ScrollView, TouchableOpacity, View } from "react-native";
+import { useEffect } from "react";
+import { ActivityIndicator, Dimensions, Platform, ScrollView, TouchableOpacity, View } from "react-native";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function GetStarted() {
+    const { isAuthenticated, isLoading } = useAuth();
+
+    // Redirect to main app if already authenticated
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            router.replace('/(app)/(tabs)');
+        }
+    }, [isAuthenticated, isLoading]);
+
+    // Show loading screen while checking authentication
+    if (isLoading) {
+        return (
+            <View className="flex-1 bg-dark-bg items-center justify-center">
+                <ActivityIndicator size="large" color={CineMateColors.primary} />
+                <Text variant="h6" color="#FFFFFF" className="mt-4">
+                    Loading...
+                </Text>
+            </View>
+        );
+    }
+
     const handleSignIn = () => {
         // Provide haptic feedback
         if (Platform.OS === 'ios') {
