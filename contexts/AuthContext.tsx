@@ -35,6 +35,7 @@ export interface AuthContextType {
     // State
     user: User | null;
     isAuthenticated: boolean;
+    setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
     isLoading: boolean;
     
     // Actions
@@ -97,33 +98,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const login = async (credentials: LoginCredentials): Promise<void> => {
         try {
             setIsLoading(true);
-            
+
             const response = await useAuthentication.login(credentials);
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
-                Alert.alert('Login Error', errorResponse.message);
-                throw new Error(errorResponse.message);
+                setIsAuthenticated(false); // Ensure user is not authenticated on error
+                throw errorResponse;
             }
 
             // Extract token and user data from response
             const successResponse = response as ApiResponse<any>;
             const { access_token, user: userData } = successResponse.data;
-            
+
             if (!access_token) {
+                setIsAuthenticated(false);
                 throw new Error('No access token received');
             }
 
             await storeToken(access_token);
             await storeUserData(userData);
-            
+
             setIsAuthenticated(true);
-            
+
             // Navigate to main app
             router.replace('/(app)/(tabs)');
         } catch (error: any) {
+            setIsAuthenticated(false); // Always set to false on error
             console.error('Login error:', error);
-            throw error;
+            //throw error;
         } finally {
             setIsLoading(false);
         }
@@ -140,8 +143,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             
             if (!response.success) {
                 const errorResponse = response as ApiError;
-                Alert.alert('Signup Error', errorResponse.message);
-                throw new Error(errorResponse.message);
+                // Don't show alert here - let the component handle error display
+                // Just throw the original error response to preserve validation details
+                throw errorResponse;
             }
 
             // Extract token and user data from response
@@ -352,6 +356,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const contextValue: AuthContextType = {
         user,
         isAuthenticated,
+        setIsAuthenticated,
         isLoading,
         login,
         signup,

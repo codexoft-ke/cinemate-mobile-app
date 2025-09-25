@@ -3,7 +3,7 @@ export interface Movie {
     title?: string;
     poster?: string;
     backdrop?: string;
-    releaseDate?: string;
+    release_date?: string;
     genre?: string | number | string[] | number[];
     rating?: number;
     duration?: number | string;
@@ -12,11 +12,11 @@ export interface Movie {
     synopsis?: string;
 
     // Boolean Values
-    isFavorite?: boolean;
-    isWatchlisted?: boolean;
-    isTrending?: boolean;
-    isRecommended?: boolean;
-    isSeries?: boolean;
+    is_favorite?: boolean;
+    is_watchlisted?: boolean;
+    is_trending?: boolean;
+    is_recommended?: boolean;
+    is_series?: boolean;
 
     [key: string]: any | string[] | number | undefined;
 }

@@ -3,20 +3,20 @@
 @tailwind utilities;
 
 
-
-@utility custom-scrollbar {
-  &::-webkit-scrollbar {
-    @apply size-1.5;
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
   }
 
-  &::-webkit-scrollbar-track {
-    @apply rounded-full;
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply rounded-full bg-transparent;
   }
 
-  &::-webkit-scrollbar-thumb {
-    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
   }
-}
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-alt-bg
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 hover:bg-gray-500;
+  }
 }

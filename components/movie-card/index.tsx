@@ -153,7 +153,7 @@ const MovieCard = memo(function MovieCard({
                                 </View>
                             )}
                             <Text className="text-gray-300" variant={orientation === 'horizontal' ? 'body' : 'caption'} weight="medium">
-                                {data.releaseDate ? new Date(data.releaseDate).getFullYear() : 'N/A'}
+                                {data.release_date ? new Date(data.release_date).getFullYear() : 'N/A'}
                             </Text>
                             {data.duration && (
                                 <>

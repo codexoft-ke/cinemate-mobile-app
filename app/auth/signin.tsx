@@ -2,11 +2,12 @@ import { AppHeader } from "@/components/ui/app-header";
 import { Text } from "@/components/ui/app-text";
 import { CineMateColors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
-import { getFieldError, getValidationErrors } from "@/hooks/use-api";
+import { ApiError, getFieldError, getValidationErrors, useAuthentication } from "@/hooks/use-api";
+import useStore from "@/hooks/use-store";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router"; // keep only this import
 import { useState } from 'react';
 import {
     ActivityIndicator,
@@ -19,11 +20,12 @@ import {
 } from "react-native";
 
 export default function SignIn() {
-    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    const {setIsAuthenticated} = useAuth();
 
     const [inputErrors, setInputErrors] = useState({
         email: {
@@ -54,7 +56,7 @@ export default function SignIn() {
                 message: !password ? "Password is required" : ""
             }
         };
-        
+
         setInputErrors(errors);
         return !errors.email.error && !errors.password.error;
     };
@@ -70,25 +72,49 @@ export default function SignIn() {
 
         setIsLoading(true);
         clearInputErrors(); // Clear any previous errors
-        
+
         try {
-            await login({ email, password });
-            // Navigation is handled automatically by AuthContext after successful login
+            const response = await useAuthentication.login({ email, password });
+            console.log("Login Response:", JSON.stringify(response));
+            if (!response.success) {
+                const errorResponse = response as ApiError;
+                throw errorResponse;
+            }
+            // Store token and user data
+            const { auth_token, user: userData } = (response.data || {}) as { auth_token: string; user: any };
+            if (!auth_token) {
+                throw new Error('No auth token received');
+            }
+            await useStore.setItem('auth_token', auth_token);
+            await useStore.setItem('user_data', JSON.stringify(userData));
+            setIsAuthenticated(true);
+            // Navigate to main app
+            router.replace('/(app)/(tabs)');
         } catch (error: any) {
             // Check if it's a validation error (ApiError with validation details)
             if (error && !error.success && error.error?.details) {
                 const validationErrors = getValidationErrors(error);
-                
+
+                // Handle non_field_errors as a general error alert
+                if (validationErrors && validationErrors.non_field_errors && validationErrors.non_field_errors.length > 0) {
+                    Alert.alert(
+                        'Sign In Failed',
+                        validationErrors.non_field_errors.join('\n'),
+                        [{ text: 'OK' }]
+                    );
+                    return;
+                }
+
                 if (validationErrors) {
                     // Update form errors with server validation
                     const updatedErrors = { ...inputErrors };
-                    
+
                     // Map server field names to form field names
                     const fieldMapping: { [key: string]: keyof typeof updatedErrors } = {
                         'email': 'email',
                         'password': 'password'
                     };
-                    
+
                     Object.keys(validationErrors).forEach(field => {
                         const formField = fieldMapping[field] || field as keyof typeof updatedErrors;
                         if (updatedErrors[formField]) {
@@ -101,7 +127,6 @@ export default function SignIn() {
                             }
                         }
                     });
-                    
                     setInputErrors(updatedErrors);
                 } else {
                     // Fallback to generic error
@@ -257,9 +282,9 @@ export default function SignIn() {
                         }}
                     >
                         {isLoading && (
-                            <ActivityIndicator 
-                                color="#FFFFFF" 
-                                size="small" 
+                            <ActivityIndicator
+                                color="#FFFFFF"
+                                size="small"
                                 style={{ marginRight: 8 }}
                             />
                         )}

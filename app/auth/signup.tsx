@@ -1,12 +1,12 @@
 import { AppHeader } from "@/components/ui/app-header";
 import { Text } from "@/components/ui/app-text";
 import { CineMateColors } from "@/constants/theme";
-import { useAuth } from "@/contexts/AuthContext";
-import { getFieldError, getValidationErrors, useMovies } from "@/hooks/use-api";
+import { ApiError, getFieldError, getValidationErrors, useAuthentication, useMovies } from "@/hooks/use-api";
+import useStore from "@/hooks/use-store";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -19,38 +19,36 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
-
 const { width: screenWidth } = Dimensions.get('window');
 
-interface Genre {
-    id: string;
-    name: string;
-}
-
-const genreColors: { [key: string]: string } = {
-    'Action': CineMateColors.action,
-    'Comedy': CineMateColors.comedy,
-    'Drama': CineMateColors.drama,
-    'Horror': CineMateColors.horror,
-    'Romance': CineMateColors.romance,
-    'Sci-Fi': CineMateColors.sciFi,
-    'Thriller': CineMateColors.thriller,
-    'Adventure': '#FF6B35',
-    'Animation': '#4ECDC4',
-    'Crime': '#556B2F',
-    'Documentary': '#CD853F',
-    'Family': '#FFB6C1',
-    'Fantasy': '#9370DB',
-    'History': '#8B4513',
-    'Music': '#FF1493',
-    'Mystery': '#2F4F4F',
-    'War': '#800000',
-    'Western': '#DAA520',
-};
-
 export default function SignUp() {
-    const { signup } = useAuth();
-    
+
+    interface Genre {
+        id: string;
+        name: string;
+    }
+
+    const genreColors: { [key: string]: string } = {
+        'Action': CineMateColors.action,
+        'Comedy': CineMateColors.comedy,
+        'Drama': CineMateColors.drama,
+        'Horror': CineMateColors.horror,
+        'Romance': CineMateColors.romance,
+        'Sci-Fi': CineMateColors.sciFi,
+        'Thriller': CineMateColors.thriller,
+        'Adventure': '#FF6B35',
+        'Animation': '#4ECDC4',
+        'Crime': '#556B2F',
+        'Documentary': '#CD853F',
+        'Family': '#FFB6C1',
+        'Fantasy': '#9370DB',
+        'History': '#8B4513',
+        'Music': '#FF1493',
+        'Mystery': '#2F4F4F',
+        'War': '#800000',
+        'Western': '#DAA520',
+    };
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -58,7 +56,7 @@ export default function SignUp() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Genre selection state
     const [genres, setGenres] = useState<Genre[]>([{
         id: '1',
@@ -88,7 +86,7 @@ export default function SignUp() {
         id: '7',
         name: 'Thriller'
     }
-]);
+    ]);
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
     const [showGenreModal, setShowGenreModal] = useState(false);
     const [loadingGenres, setLoadingGenres] = useState(false);
@@ -118,9 +116,9 @@ export default function SignUp() {
         if (Platform.OS === 'ios') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
-        
-        setSelectedGenres(prev => 
-            prev.includes(genreId) 
+
+        setSelectedGenres(prev =>
+            prev.includes(genreId)
                 ? prev.filter(id => id !== genreId)
                 : [...prev, genreId]
         );
@@ -132,10 +130,6 @@ export default function SignUp() {
 
     const [inputErrors, setInputErrors] = useState({
         name: {
-            error: false,
-            message: ""
-        },
-        email: {
             error: false,
             message: ""
         },
@@ -156,7 +150,6 @@ export default function SignUp() {
     const clearInputErrors = () => {
         setInputErrors({
             name: { error: false, message: "" },
-            email: { error: false, message: "" },
             email_address: { error: false, message: "" },
             password: { error: false, message: "" },
             c_password: { error: false, message: "" },
@@ -186,7 +179,7 @@ export default function SignUp() {
                 message: !confirmPassword ? "Please confirm your password" : confirmPassword !== password ? "Passwords don't match" : ""
             }
         };
-        
+
         setInputErrors(errors);
         return !errors.name.error && !errors.email.error && !errors.email_address.error && !errors.password.error && !errors.c_password.error;
     };
@@ -211,31 +204,53 @@ export default function SignUp() {
 
         setIsLoading(true);
         clearInputErrors(); // Clear any previous errors
-        
+
         try {
-            await signup({ 
-                email, 
-                password, 
+            const response = await useAuthentication.signup({
+                email,
+                password,
                 name,
                 genres: selectedGenres
             });
-            // Navigation is handled automatically by AuthContext after successful signup
+            if (!response.success) {
+                const errorResponse = response as ApiError;
+                throw errorResponse;
+            }
+            // Store token and user data
+            const { access_token, user: userData } = (response.data || {}) as { access_token: string; user: any };
+            if (!access_token) {
+                throw new Error('No access token received');
+            }
+            await useStore.setItem('auth_token', access_token);
+            await useStore.setItem('user_data', JSON.stringify(userData));
+            // Navigate to main app
+            router.replace('/(app)/(tabs)');
         } catch (error: any) {
             // Check if it's a validation error (ApiError with validation details)
             if (error && !error.success && error.error?.details) {
                 const validationErrors = getValidationErrors(error);
-                
+
+                // Handle non_field_errors as a general error alert
+                if (validationErrors && validationErrors.non_field_errors && validationErrors.non_field_errors.length > 0) {
+                    Alert.alert(
+                        'Sign Up Failed',
+                        validationErrors.non_field_errors.join('\n'),
+                        [{ text: 'OK' }]
+                    );
+                    return;
+                }
+
                 if (validationErrors) {
                     // Update form errors with server validation
                     const updatedErrors = { ...inputErrors };
-                    
+
                     // Map server field names to form field names
                     const fieldMapping: { [key: string]: keyof typeof updatedErrors } = {
                         'email': 'email_address', // Django uses 'email', form uses 'email_address' for display
                         'name': 'name',
                         'password': 'password'
                     };
-                    
+
                     Object.keys(validationErrors).forEach(field => {
                         const formField = fieldMapping[field] || field as keyof typeof updatedErrors;
                         if (updatedErrors[formField]) {
@@ -248,7 +263,6 @@ export default function SignUp() {
                             }
                         }
                     });
-                    
                     setInputErrors(updatedErrors);
                 } else {
                     // Fallback to generic error
@@ -342,12 +356,12 @@ export default function SignUp() {
                             placeholderTextColor={CineMateColors.textSecondary}
                             autoCapitalize="none"
                             autoComplete="email"
-                            className={`font-medium bg-alt-bg text-white text-base rounded-md p-4 border ${inputErrors.email.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
+                            className={`font-medium bg-alt-bg text-white text-base rounded-md p-4 border ${inputErrors.email_address.error ? "border-red-600" : "border-transparent"} focus-visible:outline-none`}
                         />
-                        {inputErrors.email.error && (
+                        {inputErrors.email_address.error && (
                             <View className="pt-2">
                                 <Text color="red" weight="semiBold">
-                                    {inputErrors.email.message}
+                                    {inputErrors.email_address.message}
                                 </Text>
                             </View>
                         )}
@@ -531,9 +545,9 @@ export default function SignUp() {
                         }}
                     >
                         {isLoading && (
-                            <ActivityIndicator 
-                                color="#FFFFFF" 
-                                size="small" 
+                            <ActivityIndicator
+                                color="#FFFFFF"
+                                size="small"
                                 style={{ marginRight: 8 }}
                             />
                         )}
@@ -578,11 +592,11 @@ export default function SignUp() {
                                 Cancel
                             </Text>
                         </TouchableOpacity>
-                        
+
                         <Text color="#FFFFFF" variant="h6" weight="semiBold">
                             Select Genres
                         </Text>
-                        
+
                         <TouchableOpacity
                             onPress={() => {
                                 if (Platform.OS === 'ios') {
@@ -616,7 +630,7 @@ export default function SignUp() {
                                 {genres.map((item) => {
                                     const isSelected = selectedGenres.includes(item.id);
                                     const genreColor = getGenreColor(item.name);
-                                    
+
                                     return (
                                         <TouchableOpacity
                                             key={item.id}
@@ -685,6 +699,6 @@ const getGenreIcon = (genreName: string): keyof typeof Feather.glyphMap => {
         'War': 'crosshair',
         'Western': 'sun',
     };
-    
+
     return iconMap[genreName] || 'film';
 };

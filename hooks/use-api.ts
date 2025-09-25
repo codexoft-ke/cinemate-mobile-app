@@ -78,10 +78,12 @@ axiosInstance.interceptors.response.use(
                 });
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
-                if (typeof window !== 'undefined') {
-                    // Clear stored auth token on refresh failure
+                // Clear stored auth token on refresh failure but don't redirect automatically
+                // Let the app's auth state management handle the navigation
+                try {
                     await useSecureStore.deleteItem('auth_token');
-                    window.location.href = '/login?session=expired';
+                } catch (clearError) {
+                    console.error('Error clearing auth token:', clearError);
                 }
                 return Promise.reject(refreshError);
             }
