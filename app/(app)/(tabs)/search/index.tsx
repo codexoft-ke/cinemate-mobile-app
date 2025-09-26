@@ -54,7 +54,7 @@ export default function SearchScreen() {
             duration: 139,
             genre: ["Drama", "Thriller"],
             rating: 8.8,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -67,7 +67,7 @@ export default function SearchScreen() {
             duration: 142,
             genre: ["Drama", "Romance"],
             rating: 8.8,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -80,7 +80,7 @@ export default function SearchScreen() {
             duration: 142,
             genre: ["Drama"],
             rating: 9.3,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -93,7 +93,7 @@ export default function SearchScreen() {
             duration: 175,
             genre: ["Drama", "Crime"],
             rating: 9.2,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -106,7 +106,7 @@ export default function SearchScreen() {
             duration: 195,
             genre: ["Drama", "History"],
             rating: 9.0,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -119,7 +119,7 @@ export default function SearchScreen() {
             duration: 154,
             genre: ["Crime", "Drama"],
             rating: 8.9,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -132,7 +132,7 @@ export default function SearchScreen() {
             duration: 152,
             genre: ["Action", "Crime", "Drama"],
             rating: 9.0,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -145,7 +145,7 @@ export default function SearchScreen() {
             duration: 178,
             genre: ["Western"],
             rating: 8.8,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -158,7 +158,7 @@ export default function SearchScreen() {
             duration: 189,
             genre: ["Comedy", "Drama", "Romance"],
             rating: 8.7,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -171,7 +171,7 @@ export default function SearchScreen() {
             duration: 148,
             genre: ["Action", "Science Fiction", "Thriller"],
             rating: 8.8,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -184,7 +184,7 @@ export default function SearchScreen() {
             duration: 133,
             genre: ["Comedy", "Thriller", "Drama"],
             rating: 8.6,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -197,7 +197,7 @@ export default function SearchScreen() {
             duration: 202,
             genre: ["Drama", "Crime"],
             rating: 9.0,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -210,7 +210,7 @@ export default function SearchScreen() {
             duration: 97,
             genre: ["Drama"],
             rating: 9.0,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -223,7 +223,7 @@ export default function SearchScreen() {
             duration: 125,
             genre: ["Animation", "Family", "Supernatural"],
             rating: 8.6,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -236,7 +236,7 @@ export default function SearchScreen() {
             duration: 189,
             genre: ["Fantasy", "Drama", "Crime"],
             rating: 8.6,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -249,7 +249,7 @@ export default function SearchScreen() {
             duration: 180,
             genre: ["Drama", "History"],
             rating: 8.4,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -262,7 +262,7 @@ export default function SearchScreen() {
             duration: 146,
             genre: ["Drama", "Crime"],
             rating: 8.7,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -275,7 +275,7 @@ export default function SearchScreen() {
             duration: 207,
             genre: ["Action", "Drama"],
             rating: 8.6,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -288,7 +288,7 @@ export default function SearchScreen() {
             duration: 117,
             genre: ["Animation", "Action", "Adventure"],
             rating: 8.4,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -301,7 +301,7 @@ export default function SearchScreen() {
             duration: 155,
             genre: ["Drama", "Romance"],
             rating: 8.5,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -314,7 +314,7 @@ export default function SearchScreen() {
             duration: 106,
             genre: ["Romance", "Animation", "Drama"],
             rating: 8.5,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -327,7 +327,7 @@ export default function SearchScreen() {
             duration: 201,
             genre: ["Adventure", "Fantasy", "Action"],
             rating: 8.9,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -340,7 +340,7 @@ export default function SearchScreen() {
             duration: 122,
             genre: ["Romance", "Drama"],
             rating: 8.9,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         },
         {
@@ -353,7 +353,7 @@ export default function SearchScreen() {
             duration: 122,
             genre: ["Drama"],
             rating: 8.3,
-            isFavorite: false,
+            is_favorite: false,
             isSeries: false
         }
     ])

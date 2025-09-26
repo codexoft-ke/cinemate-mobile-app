@@ -1,8 +1,10 @@
 import { endPoints } from '@/constants/endpoints';
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig, isAxiosError } from 'axios';
 import useSecureStore from './use-store';
+import useStore from './use-store';
 
-const BASE_URL = "http://192.168.11.143:8000";
+//const BASE_URL = "http://192.168.11.143:8000";
+const BASE_URL = "http://localhost:8000";
 
 // Extend the AxiosRequestConfig to include _retry property
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -88,7 +90,6 @@ axiosInstance.interceptors.response.use(
                 return Promise.reject(refreshError);
             }
         }
-
         return Promise.reject(error);
     }
 );

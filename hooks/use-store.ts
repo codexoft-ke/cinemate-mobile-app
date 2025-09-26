@@ -9,7 +9,10 @@ const useStore = {
     },
     deleteItem: async (key: string): Promise<void> => {
         return await AsyncStorage.removeItem(key);
-    }
+    },
+    clearItems: async (): Promise<void> => {
+        return await AsyncStorage.clear();
+    },
 }
 
 

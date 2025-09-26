@@ -13,6 +13,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useLoadFonts } from '@/hooks/use-fonts';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ToastProvider } from 'react-native-toast-notifications'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -65,13 +66,29 @@ export default function RootLayout() {
         return null;
     }
 
+
+
     return (
         <AuthProvider>
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <ToastProvider
+                    placement="top"
+                    duration={4000}
+                    offsetTop={50}
+                    offsetBottom={40}
+                    swipeEnabled={true}
+                    animationType="slide-in"
+                    successColor="#4BB543"
+                    dangerColor="#FF3333"
+                    warningColor="#FFCC00"
+                    normalColor="#333333"
+                    textStyle={{ fontFamily: 'Montserrat-Medium' }}
+                >
                 <SafeAreaView className="flex-1 bg-dark-bg" edges={['bottom', 'top']}>
                     <RootLayoutNav />
                     <StatusBar style="auto" />
                 </SafeAreaView>
+                </ToastProvider>
             </ThemeProvider>
         </AuthProvider>
     );

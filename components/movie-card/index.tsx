@@ -112,9 +112,9 @@ const MovieCard = memo(function MovieCard({
                     }}
                 >
                     <Ionicons
-                        name={data.isFavorite ? "heart" : "heart-outline"}
+                        name={data.is_favorite ? "heart" : "heart-outline"}
                         size={20}
-                        color={data.isFavorite ? "#ef4444" : "white"}
+                        color={data.is_favorite ? "#ef4444" : "white"}
                     />
                 </TouchableOpacity>
 
@@ -167,9 +167,13 @@ const MovieCard = memo(function MovieCard({
 
                         {/* Genre and duration row */}
                         <View className="flex-row items-center">
-                            {data.genre && (
+                            {(data.genres || data.genre) && (
                                 <Text className="text-gray-400 text-xs mr-2" variant={orientation === 'horizontal' ? 'small' : 'caption'} weight="regular">
-                                    {Array.isArray(data.genre) ? data.genre[0] : data.genre}
+                                    {Array.isArray(data.genres)
+                                        ? data.genres[0]
+                                        : Array.isArray(data.genre)
+                                            ? data.genre[0]
+                                            : data.genres || data.genre}
                                 </Text>
                             )}
                         </View>

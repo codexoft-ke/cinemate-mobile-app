@@ -21,7 +21,7 @@ export default function MovieInfo() {
     const [movieDetails] = useState({
         id: 119051,
         isSeries: true,
-        isFavorite: false,
+        is_favorite: false,
         title: "Wednesday",
         language: "English",
         release_date: "2022-11-23",

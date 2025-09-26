@@ -11,13 +11,13 @@ import { Link, router } from "expo-router"; // keep only this import
 import { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     Platform,
     ScrollView,
     TextInput,
     TouchableOpacity,
     View
 } from "react-native";
+import { useToast } from "react-native-toast-notifications";
 
 export default function SignIn() {
     const [email, setEmail] = useState('');
@@ -25,7 +25,8 @@ export default function SignIn() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const {setIsAuthenticated} = useAuth();
+    const { setIsAuthenticated } = useAuth();
+    const toast = useToast();
 
     const [inputErrors, setInputErrors] = useState({
         email: {
@@ -97,11 +98,12 @@ export default function SignIn() {
 
                 // Handle non_field_errors as a general error alert
                 if (validationErrors && validationErrors.non_field_errors && validationErrors.non_field_errors.length > 0) {
-                    Alert.alert(
-                        'Sign In Failed',
-                        validationErrors.non_field_errors.join('\n'),
-                        [{ text: 'OK' }]
-                    );
+                    toast.show(validationErrors.non_field_errors.join('\n'),{
+                        type: 'danger',
+                        placement: 'top',
+                        duration: 4000,
+                        animationType: 'slide-in',
+                    })
                     return;
                 }
 
@@ -130,19 +132,20 @@ export default function SignIn() {
                     setInputErrors(updatedErrors);
                 } else {
                     // Fallback to generic error
-                    Alert.alert(
-                        'Sign In Failed',
-                        error.message || 'Validation failed. Please check your inputs.',
-                        [{ text: 'OK' }]
-                    );
+                    toast.show(error.message || 'Validation failed. Please check your inputs.',{
+                        type: 'danger',
+                        placement: 'top',
+                        duration: 4000,
+                        animationType: 'slide-in',
+                    })
                 }
             } else {
-                // Show generic error alert for non-validation errors
-                Alert.alert(
-                    'Sign In Failed',
-                    error.message || 'An error occurred during sign in. Please try again.',
-                    [{ text: 'OK' }]
-                );
+                toast.show(error.message || 'An error occurred during sign in. Please try again.',{
+                    type: 'danger',
+                    placement: 'top',
+                    duration: 4000,
+                    animationType: 'slide-in',
+                })
             }
         } finally {
             setIsLoading(false);

@@ -17,7 +17,7 @@ export default function Recommendation() {
             id: 278,
             title: "The Shawshank Redemption",
             poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1994-09-23",
             genre: "Drama",
             rating: 8.712
@@ -26,7 +26,7 @@ export default function Recommendation() {
             id: 238,
             title: "The Godfather",
             poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1972-03-24",
             genre: "Drama",
             rating: 8.685
@@ -35,7 +35,7 @@ export default function Recommendation() {
             id: 240,
             title: "The Godfather Part II",
             poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1974-12-20",
             genre: "Drama",
             rating: 8.57
@@ -44,7 +44,7 @@ export default function Recommendation() {
             id: 424,
             title: "Schindler's List",
             poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1993-12-15",
             genre: "Drama",
             rating: 8.566
@@ -53,7 +53,7 @@ export default function Recommendation() {
             id: 389,
             title: "12 Angry Men",
             poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1957-04-10",
             genre: "Drama",
             rating: 8.549
@@ -62,7 +62,7 @@ export default function Recommendation() {
             id: 129,
             title: "Spirited Away",
             poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2002-09-20",
             genre: "Animation",
             rating: 8.5
@@ -71,7 +71,7 @@ export default function Recommendation() {
             id: 155,
             title: "The Dark Knight",
             poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2008-07-18",
             genre: "Drama",
             rating: 8.523
@@ -80,7 +80,7 @@ export default function Recommendation() {
             id: 19404,
             title: "Dilwale Dulhania Le Jayenge",
             poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1995-10-20",
             genre: "Comedy",
             rating: 8.5
@@ -89,7 +89,7 @@ export default function Recommendation() {
             id: 497,
             title: "The Green Mile",
             poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1999-12-10",
             genre: "Fantasy",
             rating: 8.504
@@ -98,7 +98,7 @@ export default function Recommendation() {
             id: 496243,
             title: "Parasite",
             poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2019-10-11",
             genre: "Comedy",
             rating: 8.498
@@ -110,7 +110,7 @@ export default function Recommendation() {
             id: 278,
             title: "The Shawshank Redemption",
             poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1994-09-23",
             genre: "Drama",
             rating: 8.712
@@ -119,7 +119,7 @@ export default function Recommendation() {
             id: 238,
             title: "The Godfather",
             poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1972-03-24",
             genre: "Drama",
             rating: 8.685
@@ -128,7 +128,7 @@ export default function Recommendation() {
             id: 240,
             title: "The Godfather Part II",
             poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1974-12-20",
             genre: "Drama",
             rating: 8.57
@@ -137,7 +137,7 @@ export default function Recommendation() {
             id: 424,
             title: "Schindler's List",
             poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1993-12-15",
             genre: "Drama",
             rating: 8.566
@@ -146,7 +146,7 @@ export default function Recommendation() {
             id: 389,
             title: "12 Angry Men",
             poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1957-04-10",
             genre: "Drama",
             rating: 8.549
@@ -155,7 +155,7 @@ export default function Recommendation() {
             id: 129,
             title: "Spirited Away",
             poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2002-09-20",
             genre: "Animation",
             rating: 8.5
@@ -164,7 +164,7 @@ export default function Recommendation() {
             id: 155,
             title: "The Dark Knight",
             poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2008-07-18",
             genre: "Drama",
             rating: 8.523
@@ -173,7 +173,7 @@ export default function Recommendation() {
             id: 19404,
             title: "Dilwale Dulhania Le Jayenge",
             poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1995-10-20",
             genre: "Comedy",
             rating: 8.5
@@ -182,7 +182,7 @@ export default function Recommendation() {
             id: 497,
             title: "The Green Mile",
             poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1999-12-10",
             genre: "Fantasy",
             rating: 8.504
@@ -191,7 +191,7 @@ export default function Recommendation() {
             id: 496243,
             title: "Parasite",
             poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2019-10-11",
             genre: "Comedy",
             rating: 8.498
@@ -203,7 +203,7 @@ export default function Recommendation() {
             id: 278,
             title: "The Shawshank Redemption",
             poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1994-09-23",
             genre: "Drama",
             rating: 8.712
@@ -212,7 +212,7 @@ export default function Recommendation() {
             id: 238,
             title: "The Godfather",
             poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1972-03-24",
             genre: "Drama",
             rating: 8.685
@@ -221,7 +221,7 @@ export default function Recommendation() {
             id: 240,
             title: "The Godfather Part II",
             poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1974-12-20",
             genre: "Drama",
             rating: 8.57
@@ -230,7 +230,7 @@ export default function Recommendation() {
             id: 424,
             title: "Schindler's List",
             poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1993-12-15",
             genre: "Drama",
             rating: 8.566
@@ -239,7 +239,7 @@ export default function Recommendation() {
             id: 389,
             title: "12 Angry Men",
             poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1957-04-10",
             genre: "Drama",
             rating: 8.549
@@ -248,7 +248,7 @@ export default function Recommendation() {
             id: 129,
             title: "Spirited Away",
             poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2002-09-20",
             genre: "Animation",
             rating: 8.5
@@ -257,7 +257,7 @@ export default function Recommendation() {
             id: 155,
             title: "The Dark Knight",
             poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2008-07-18",
             genre: "Drama",
             rating: 8.523
@@ -266,7 +266,7 @@ export default function Recommendation() {
             id: 19404,
             title: "Dilwale Dulhania Le Jayenge",
             poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1995-10-20",
             genre: "Comedy",
             rating: 8.5
@@ -275,7 +275,7 @@ export default function Recommendation() {
             id: 497,
             title: "The Green Mile",
             poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1999-12-10",
             genre: "Fantasy",
             rating: 8.504
@@ -284,7 +284,7 @@ export default function Recommendation() {
             id: 496243,
             title: "Parasite",
             poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2019-10-11",
             genre: "Comedy",
             rating: 8.498
@@ -296,7 +296,7 @@ export default function Recommendation() {
             id: 278,
             title: "The Shawshank Redemption",
             poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1994-09-23",
             genre: "Drama",
             rating: 8.712
@@ -305,7 +305,7 @@ export default function Recommendation() {
             id: 238,
             title: "The Godfather",
             poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1972-03-24",
             genre: "Drama",
             rating: 8.685
@@ -314,7 +314,7 @@ export default function Recommendation() {
             id: 240,
             title: "The Godfather Part II",
             poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1974-12-20",
             genre: "Drama",
             rating: 8.57
@@ -323,7 +323,7 @@ export default function Recommendation() {
             id: 424,
             title: "Schindler's List",
             poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1993-12-15",
             genre: "Drama",
             rating: 8.566
@@ -332,7 +332,7 @@ export default function Recommendation() {
             id: 389,
             title: "12 Angry Men",
             poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1957-04-10",
             genre: "Drama",
             rating: 8.549
@@ -341,7 +341,7 @@ export default function Recommendation() {
             id: 129,
             title: "Spirited Away",
             poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2002-09-20",
             genre: "Animation",
             rating: 8.5
@@ -350,7 +350,7 @@ export default function Recommendation() {
             id: 155,
             title: "The Dark Knight",
             poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2008-07-18",
             genre: "Drama",
             rating: 8.523
@@ -359,7 +359,7 @@ export default function Recommendation() {
             id: 19404,
             title: "Dilwale Dulhania Le Jayenge",
             poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1995-10-20",
             genre: "Comedy",
             rating: 8.5
@@ -368,7 +368,7 @@ export default function Recommendation() {
             id: 497,
             title: "The Green Mile",
             poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "1999-12-10",
             genre: "Fantasy",
             rating: 8.504
@@ -377,7 +377,7 @@ export default function Recommendation() {
             id: 496243,
             title: "Parasite",
             poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            isFavorite: false,
+            is_favorite: false,
             releaseDate: "2019-10-11",
             genre: "Comedy",
             rating: 8.498

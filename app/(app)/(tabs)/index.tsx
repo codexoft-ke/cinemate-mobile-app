@@ -8,8 +8,9 @@ import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { Dimensions, Platform, Pressable, ScrollView, TextInput, ToastAndroid, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
+import { useToast } from "react-native-toast-notifications";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -17,32 +18,25 @@ const { width: screenWidth } = Dimensions.get('window');
 interface Category {
     id: number | string;
     name: string;
+    movieCount?: number; // Optional count of movies in this category
 }
 
 export default function HomeScreen() {
 
     const router = useRouter();
+    const toast = useToast();
+
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const [trendingMovies, setTrendingMovies] = useState<Movie[]>([])
+    const [filteredTrendingMovies, setFilteredTrendingMovies] = useState<Movie[]>([])
 
     const [recommendation, setRecommendation] = useState<Movie[]>([]);
 
     const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([]);
+    const [movieCategories, setMovieCategories] = useState<Category[]>([]);
 
-    const movieCategories = [
-        { id: 0, name: "All" },
-        { id: 1, name: "Action" },
-        { id: 2, name: "Comedy" },
-        { id: 3, name: "Drama" },
-        { id: 4, name: "Horror" },
-        { id: 5, name: "Sci-Fi" },
-        { id: 6, name: "Romance" },
-        { id: 7, name: "Thriller" },
-        { id: 8, name: "Animation" },
-        { id: 9, name: "Documentary" },
-        { id: 10, name: "Fantasy" }
-    ];
+    const [activeCategory, setActiveCategory] = useState<Category["id"]>("All");
 
     const onSearch = (text: string) => {
         console.log("Searching for:", text);
@@ -53,66 +47,103 @@ export default function HomeScreen() {
         router.push(`/movie/${movie.id}`);
     }
 
-    const fetchTrendingMovies = async () => {
-        try {
-            const response = await useMovies.popular({ page: 1, limit: 5 });
-            if (!response.success) {
-                throw new Error(response.message || "Failed to load trending movies");
-
-            }
-            if (response?.data && typeof response.data === 'object' && 'movies' in response.data && Array.isArray((response.data as any).movies)) {
-                setTrendingMovies((response.data as { movies: Movie[] }).movies);
-            } else {
-                throw new Error("Invalid response data format");
-            }
-        } catch (error: any) {
-            ToastAndroid.show(error.message || "Failed to fetch trending movies", ToastAndroid.SHORT);
+    const onCategoryPress = (category: Category) => {
+        setActiveCategory(category.id);
+        switch (category.id) {
+            case "All":
+                setFilteredTrendingMovies(trendingMovies);
+                break;
+        
+            default:
+                const filtered = trendingMovies.filter(movie => {
+                    const genres = movie.genres || movie.genre;
+                    if (genres) {
+                        const genreList = Array.isArray(genres) ? genres : [genres];
+                        return genreList.includes(category.name);
+                    }
+                    return false;
+                });
+                setFilteredTrendingMovies(filtered);
+                break;
         }
     }
 
     // Update the movie's favorite status in the arrays
-    const handleFavoritePress = useCallback((movie: Movie, category: string) => {
-        let movieIndex: number;
-        switch (category) {
-            case "trending":
-                movieIndex = trendingMovies.findIndex(m => m.id === movie.id);
-                setTrendingMovies(prev => {
-                    const updatedMovies = [...prev];
-                    updatedMovies[movieIndex] = {
-                        ...updatedMovies[movieIndex],
-                        isFavorite: !updatedMovies[movieIndex].isFavorite
-                    };
-                    return updatedMovies;
-                });
-                break;
-            case "recommendation":
-                movieIndex = recommendation.findIndex(m => m.id === movie.id);
-                setRecommendation(prev => {
-                    const updatedMovies = [...prev];
-                    updatedMovies[movieIndex] = {
-                        ...updatedMovies[movieIndex],
-                        isFavorite: !updatedMovies[movieIndex].isFavorite
-                    };
-                    return updatedMovies;
-                });
-                break;
-            case "upcoming":
-                movieIndex = upcomingMovies.findIndex(m => m.id === movie.id);
-                setUpcomingMovies(prev => {
-                    const updatedMovies = [...prev];
-                    updatedMovies[movieIndex] = {
-                        ...updatedMovies[movieIndex],
-                        isFavorite: !updatedMovies[movieIndex].isFavorite
-                    };
-                    return updatedMovies;
-                });
-                break;
-            default:
-                return;
+    const handleFavoritePress = useCallback(async (movie: Movie, category: string) => {
+        const loadingToastId = toast.show("Updating favorite status...", { type: "normal", placement: "top", duration: 0, animationType: "slide-in" });
+        try {
+            let response;
+            if (movie.is_favorite) {
+                // If already favorite, remove from favorites
+                response = await useMovies.removeFromFavourites({ movie_id: movie.id });
+            } else {
+                // If not favorite, add to favorites
+                response = await useMovies.addToFavourites({ movie_id: movie.id });
+            }
+            if (!response.success) {
+                throw new Error(response.message || "Failed to update favorite status");
+            }
+            toast.show(response.message || "Favorite status updated", { type: movie.is_favorite ? "danger" : "success", placement: "top", duration: 2500, animationType: "slide-in" });
+            const updatedMovie = { ...movie, is_favorite: !movie.is_favorite };            
+
+            if (category === "trending") {
+                setTrendingMovies(prevMovies => prevMovies.map(m => m.id === movie.id ? updatedMovie : m));
+                setFilteredTrendingMovies(prevMovies => prevMovies.map(m => m.id === movie.id ? updatedMovie : m));
+            } else if (category === "recommendation") {
+                setRecommendation(prevMovies => prevMovies.map(m => m.id === movie.id ? updatedMovie : m));
+            } else if (category === "upcoming") {
+                setUpcomingMovies(prevMovies => prevMovies.map(m => m.id === movie.id ? updatedMovie : m));
+            }
+        } catch (error: any) {
+            toast.show(error.message || "Failed to update favorite status", { type: "danger" });
+        } finally {
+            toast.hide(loadingToastId);
         }
     }, [recommendation, trendingMovies, upcomingMovies]);
 
     useEffect(() => {
+        const fetchTrendingMovies = async () => {
+            try {
+                const response = await useMovies.popular({ page: 1, limit: 5 });
+                if (!response.success) {
+                    throw new Error(response.message || "Failed to load trending movies");
+
+                }
+                if (response?.data && typeof response.data === 'object' && 'movies' in response.data && Array.isArray((response.data as any).movies)) {
+                    const movies = (response.data as { movies: Movie[] }).movies;
+                    setTrendingMovies(movies);
+
+                    // Collect genre counts
+                    const genreCountMap: Record<string, number> = {};
+                    movies.forEach(movie => {
+                        const genres = movie.genres || movie.genre;
+                        if (genres) {
+                            const genreList = Array.isArray(genres) ? genres : [genres];
+                            genreList.forEach((genre: string) => {
+                                genreCountMap[genre] = (genreCountMap[genre] || 0) + 1;
+                            });
+                        }
+                    });
+
+                    // Add "All" category first
+                    const categories: Category[] = [
+                        { id: "All", name: "All", movieCount: movies.length },
+                        ...Object.entries(genreCountMap).map(([genre, count]) => ({
+                            id: genre,
+                            name: genre,
+                            movieCount: count,
+                        }))
+                    ];
+                    setMovieCategories(categories);
+
+                    setFilteredTrendingMovies(movies);
+                } else {
+                    throw new Error("Invalid response data format");
+                }
+            } catch (error: any) {
+                toast.show(error.message || "Failed to fetch trending movies", { type: "danger" });
+            }
+        }
         fetchTrendingMovies();
         const fetchRecommendations = async () => {
             try {
@@ -126,7 +157,7 @@ export default function HomeScreen() {
                     throw new Error("Invalid response data format");
                 }
             } catch (error: any) {
-                ToastAndroid.show(error.message || "Failed to fetch recommendations", ToastAndroid.SHORT);
+                toast.show(error.message || "Failed to fetch recommendations", { type: "danger" });
             }
         };
         fetchRecommendations();
@@ -142,7 +173,7 @@ export default function HomeScreen() {
                     throw new Error("Invalid response data format");
                 }
             } catch (error: any) {
-                ToastAndroid.show(error.message || "Failed to fetch upcoming movies", ToastAndroid.SHORT);
+                toast.show(error.message || "Failed to fetch upcoming movies", { type: "danger" });
             }
         };
         fetchUpcomingMovies();
@@ -196,8 +227,14 @@ export default function HomeScreen() {
                         showsHorizontalScrollIndicator={false}
                         className='my-3'
                         contentContainerStyle={{ paddingHorizontal: 4, rowGap: 8, columnGap: 10 }}>
-                        {movieCategories.map(category => (
-                            <CategoryCard key={category.id} data={category} />
+                        {movieCategories.map((category, index) => (
+                            <Pressable
+                                key={index}
+                                className={`mb-3 rounded-xs px-5 py-2 bg-[#192C40] ${activeCategory === category.id ? 'bg-primary' : ''}`}
+                                onPress={()=>onCategoryPress(category)}
+                            >
+                                <Text className="text-white text-xs" variant='smallMedium' weight='medium'>{category.name} ({category.movieCount})</Text>
+                            </Pressable>
                         ))}
                     </ScrollView>
                 </View>
@@ -206,7 +243,7 @@ export default function HomeScreen() {
                     <Carousel
                         width={screenWidth}
                         height={screenWidth * (9 / 16)}
-                        data={trendingMovies}
+                        data={filteredTrendingMovies || trendingMovies}
                         renderItem={({ item }: { item: Movie }) => (
                             <View style={{ paddingHorizontal: 16, width: screenWidth }}>
                                 <MovieCard
@@ -228,7 +265,7 @@ export default function HomeScreen() {
                     />
 
                     {/* Pagination Dots */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 5 }}>
+                    {/* <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 5 }}>
                         {trendingMovies.map((_, index) => (
                             <TouchableOpacity
                                 key={index}
@@ -242,7 +279,7 @@ export default function HomeScreen() {
                                 activeOpacity={0.7}
                             />
                         ))}
-                    </View>
+                    </View> */}
                 </View>
             </View>
 
@@ -289,7 +326,7 @@ export default function HomeScreen() {
                     nestedScrollEnabled={true}
                 >
                     {upcomingMovies.map((item, index) => {
-                        const formatedDate = item?.releaseDate ? new Date(item?.releaseDate).toLocaleDateString('en-US', {
+                        const formatedDate = item?.release_date ? new Date(item?.release_date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric'
@@ -314,39 +351,3 @@ export default function HomeScreen() {
         </ScrollView>
     );
 }
-
-const CategoryCard = memo(function CategoryCard({ data }: { data: Category }) {
-
-    const router = useRouter();
-
-    const onPress = async () => {
-        try {
-            let category = data.name;
-            // If "All" is selected, just route to search page without filter
-            if (category === "All") {
-                router.push(`/search?category=All`);
-                return;
-            }
-            // Fetch movies by category using useMovies.search
-            const response = await useMovies.search({ q: "", filter: category, page: 1, limit: 20 });
-            if (response.success && response.data && typeof response.data === 'object' && 'movies' in response.data) {
-                // Pass results to search page via router (could use state management or params)
-                // For now, route with category param
-                router.push(`/search?category=${encodeURIComponent(category)}`);
-            } else {
-                ToastAndroid.show(response.message || "No movies found for this category", ToastAndroid.SHORT);
-            }
-        } catch (error: any) {
-            ToastAndroid.show(error.message || "Failed to fetch category movies", ToastAndroid.SHORT);
-        }
-    };
-
-    return (
-        <Pressable
-            className={`mb-3 rounded-xs px-5 py-2 bg-[#192C40]`}
-            onPress={onPress}
-        >
-            <Text className="text-white text-xs" variant='smallMedium' weight='medium'>{data.name}</Text>
-        </Pressable>
-    );
-});

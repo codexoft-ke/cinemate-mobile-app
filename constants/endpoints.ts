@@ -1,5 +1,5 @@
 
-export const BASE_URL = "https://api.cinemate.com"
+export const BASE_URL = "http:/localhost:8000"
 
 export const endPoints = {
     auth: {
