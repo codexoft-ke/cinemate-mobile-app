@@ -1,20 +1,20 @@
+import MovieCard from '@/components/movie-card';
 import { Text } from '@/components/ui/app-text';
 import SectionHeader from '@/components/ui/section-header';
 import StarRating from '@/components/ui/star-rating';
 import { BorderRadius, CineMateColors, Shadows, Spacing } from '@/constants/theme';
 import { useMovies } from '@/hooks/use-api';
-import { CastInfo, EpisodeInfo, ReviewInfo, VideoInfo } from '@/types';
+import { CastInfo, EpisodeInfo, Movie, ReviewInfo, VideoInfo } from '@/types';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useGlobalSearchParams } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert } from 'react-native';
-import { Dimensions, Modal, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { useToast } from 'react-native-toast-notifications';
 
 // Constants
-const { width: screenWidth } = Dimensions.get("window");
+const { height: screenHeight } = Dimensions.get("window");
 const CARD_WIDTHS = {
     CAST: 100,
     VIDEO: 200,
@@ -46,20 +46,8 @@ interface MovieDetails {
     cast?: CastInfo[];
     videos?: VideoInfo[];
     reviews?: ReviewInfo[];
-    recommendations?: Array<{
-        id?: string;
-        title?: string;
-        poster?: string;
-        backdrop?: string;
-        synopsis?: string;
-        release_date?: string;
-        duration?: number | null;
-        genres?: string[];
-        rating?: number;
-        is_favorite?: boolean;
-        is_series?: boolean;
-    }>;
-    seasons?: Array<{
+    recommendations?: Movie[];
+    seasons?: {
         id?: number;
         air_date?: string;
         episode_count?: number;
@@ -69,7 +57,7 @@ interface MovieDetails {
         season_number?: number;
         vote_average?: number;
         episodes?: EpisodeInfo[];
-    }>;
+    }[];
 }
 
 interface MovieInfoError {
@@ -85,10 +73,10 @@ const useMovieDetails = (movieId: string, toast: any) => {
 
     const fetchMovieDetails = useCallback(async () => {
         if (!movieId) return;
-        
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const response = await useMovies.details(movieId);
             if ('success' in response && response.success && response.data && (response.data as any).movie) {
@@ -163,12 +151,13 @@ export default function MovieInfo() {
     const toast = useToast();
     const { id: movieId } = useGlobalSearchParams();
     const [selectedSeason, setSelectedSeason] = useState<number>(1);
-    
+
     const { movieDetails, isLoading, error, retryFetch } = useMovieDetails(
-        Array.isArray(movieId) ? movieId[0] : movieId || '', 
+        Array.isArray(movieId) ? movieId[0] : movieId || '',
         toast
     );
-    
+    const [_, setMovieDetails] = useState<MovieDetails | null>(null); // Add this line to get the setter
+
     const {
         isVideoModalVisible,
         selectedVideo,
@@ -180,7 +169,7 @@ export default function MovieInfo() {
     // Memoized computations
     const movieInfo = useMemo(() => {
         if (!movieDetails) return null;
-        
+
         return {
             year: movieDetails.release_date?.split('-')[0] || 'N/A',
             formattedRating: movieDetails.rating ? Number(movieDetails.rating).toFixed(1) : 'N/A',
@@ -207,14 +196,122 @@ export default function MovieInfo() {
         router.back();
     }, []);
 
-    const handleFavoritePress = useCallback(() => {
-        // TODO: Implement favorite functionality
-        toast.show('Favorite functionality not implemented', { type: 'info' });
-    }, [toast]);
+    // Update the movie's favorite status in the arrays
+    // Update the movie's favorite status
+    const handleFavoritePress = useCallback(async () => {
+        if (!movieDetails?.id) {
+            toast.show("Movie data not available", { type: "danger" });
+            return;
+        }
 
-    const handleRetry = useCallback(() => {
-        retryFetch();
-    }, [retryFetch]);
+        const loadingToastId = toast.show("Updating favorite status...", {
+            type: "normal",
+            placement: "top",
+            duration: 0,
+            animationType: "slide-in"
+        });
+
+        try {
+            let response;
+            if (movieDetails.is_favorite) {
+                // If already favorite, remove from favorites
+                response = await useMovies.removeFromFavourites({ movie_id: movieDetails.id });
+            } else {
+                // If not favorite, add to favorites
+                response = await useMovies.addToFavourites({ movie_id: movieDetails.id });
+            }
+
+            if (!response.success) {
+                throw new Error(response.message || "Failed to update favorite status");
+            }
+
+            toast.show(
+                response.message || "Favorite status updated",
+                {
+                    type: movieDetails.is_favorite ? "danger" : "success",
+                    placement: "top",
+                    duration: 2500,
+                    animationType: "slide-in"
+                }
+            );
+
+            // Update the local movie details state
+            setMovieDetails(prevDetails => {
+                if (!prevDetails) return prevDetails;
+                return {
+                    ...prevDetails,
+                    is_favorite: !prevDetails.is_favorite
+                };
+            });
+
+        } catch (error: any) {
+            toast.show(
+                error.message || "Failed to update favorite status",
+                { type: "danger" }
+            );
+        } finally {
+            toast.hide(loadingToastId);
+        }
+    }, [movieDetails?.id, movieDetails?.is_favorite, toast]);
+
+    // For recommendations section, you'll need a separate handler:
+    const handleRecommendationFavoritePress = useCallback(async (movie: Movie) => {
+        if (!movie?.id) {
+            toast.show("Movie data not available", { type: "danger" });
+            return;
+        }
+
+        const loadingToastId = toast.show("Updating favorite status...", {
+            type: "normal",
+            placement: "top",
+            duration: 0,
+            animationType: "slide-in"
+        });
+
+        try {
+            let response;
+            if (movie.is_favorite) {
+                response = await useMovies.removeFromFavourites({ movie_id: movie.id });
+            } else {
+                response = await useMovies.addToFavourites({ movie_id: movie.id });
+            }
+
+            if (!response.success) {
+                throw new Error(response.message || "Failed to update favorite status");
+            }
+
+            toast.show(
+                response.message || "Favorite status updated",
+                {
+                    type: movie.is_favorite ? "danger" : "success",
+                    placement: "top",
+                    duration: 2500,
+                    animationType: "slide-in"
+                }
+            );
+
+            setMovieDetails((prevDetails: MovieDetails | null) => {
+                if (!prevDetails?.recommendations) return prevDetails;
+
+                return {
+                    ...prevDetails,
+                    recommendations: prevDetails.recommendations.map((rec: Movie) =>
+                        rec.id === movie.id
+                            ? { ...rec, is_favorite: !rec.is_favorite }
+                            : rec
+                    )
+                };
+            });
+
+        } catch (error: any) {
+            toast.show(
+                error.message || "Failed to update favorite status",
+                { type: "danger" }
+            );
+        } finally {
+            toast.hide(loadingToastId);
+        }
+    }, [toast]);
 
     // Loading state
     if (isLoading && !movieDetails) {
@@ -244,7 +341,7 @@ export default function MovieInfo() {
                     </Text>
                     <TouchableOpacity
                         className="mt-4 bg-primary px-6 py-3 rounded-lg"
-                        onPress={handleRetry}
+                        onPress={retryFetch}
                         activeOpacity={0.8}
                     >
                         <Text variant="small" weight="semiBold" className="text-white">
@@ -297,7 +394,7 @@ export default function MovieInfo() {
                     >
                         <Feather name='chevron-left' size={24} color={"#ffffff"} />
                     </TouchableOpacity>
-                    
+
                     {/* Logo */}
                     <Image
                         source={movieDetails.network_logo ? { uri: movieDetails.network_logo } : DEFAULT_IMAGES.backdrop}
@@ -306,7 +403,7 @@ export default function MovieInfo() {
                         cachePolicy="memory-disk"
                         priority="high"
                     />
-                    
+
                     <TouchableOpacity
                         className='bg-alt-bg backdrop-blur-sm p-3 rounded-md'
                         onPress={handleFavoritePress}
@@ -315,10 +412,10 @@ export default function MovieInfo() {
                         accessibilityRole="button"
                         accessibilityLabel={movieDetails.is_favorite ? "Remove from favorites" : "Add to favorites"}
                     >
-                        <Ionicons 
-                            name={movieDetails.is_favorite ? 'heart' : 'heart-outline'} 
-                            size={24} 
-                            color={movieDetails.is_favorite ? "#ef4444" : "#ffffff"} 
+                        <Ionicons
+                            name={movieDetails.is_favorite ? 'heart' : 'heart-outline'}
+                            size={24}
+                            color={movieDetails.is_favorite ? "#ef4444" : "#ffffff"}
                         />
                     </TouchableOpacity>
                 </View>
@@ -329,7 +426,7 @@ export default function MovieInfo() {
                         source={movieDetails.backdrop_url ? { uri: movieDetails.backdrop_url } : DEFAULT_IMAGES.backdrop}
                         style={{
                             width: "100%",
-                            height: screenWidth * 1.2,
+                            height: screenHeight * 0.5,
                             alignSelf: 'center'
                         }}
                         contentPosition={"center"}
@@ -364,7 +461,7 @@ export default function MovieInfo() {
                                 cachePolicy="memory-disk"
                             />
                         </View>
-                        
+
                         <View className='flex-1'>
                             <View>
                                 <Text
@@ -375,7 +472,7 @@ export default function MovieInfo() {
                                     {movieDetails.is_series ? "TV Series" : "Movie"}
                                 </Text>
                             </View>
-                            
+
                             <Text
                                 variant='movieTitle'
                                 weight='bold'
@@ -384,7 +481,7 @@ export default function MovieInfo() {
                             >
                                 {movieDetails.title || 'Unknown Title'}
                             </Text>
-                            
+
                             <View className='flex-row items-center flex-wrap'>
                                 <Text variant='small' weight='medium' className='text-gray-300'>
                                     {movieInfo.year}
@@ -406,7 +503,7 @@ export default function MovieInfo() {
                                     </>
                                 )}
                             </View>
-                            
+
                             <View className='flex-row items-center mt-2'>
                                 <Feather name="star" size={16} color="#fbbf24" />
                                 <Text variant='small' weight='semiBold' className='text-yellow-400 ml-1'>
@@ -579,6 +676,33 @@ export default function MovieInfo() {
                     </View>
                 )}
 
+                {/* Recommendations */}
+                {movieDetails?.recommendations && movieDetails?.recommendations?.length > 0 && (
+                    <View className='mb-8'>
+                        <View className='px-4'>
+                            <View className='flex-row items-center justify-between mb-4'>
+                                <Text variant='h6' weight='semiBold' className='text-white'>
+                                    Recommendations
+                                </Text>
+                            </View>
+
+                            {/* Render recommended movies */}
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                {movieDetails?.recommendations?.map((recommendation, index) => (
+                                    <View key={`recommendation-${recommendation.id || index}`} className='w-36'>
+                                        <MovieCard
+                                            data={recommendation}
+                                            orientation='vertical'
+                                            onPress={() => router.push(`/movie/${recommendation.id}`)}
+                                            onFavoritePress={() => handleRecommendationFavoritePress(recommendation)}
+                                        />
+                                    </View>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    </View>
+                )}
+
                 {/* Reviews */}
                 {movieInfo.safeReviews.length > 0 && (
                     <View className='mb-8'>
@@ -609,11 +733,11 @@ export default function MovieInfo() {
 }
 
 // Separated Modal Component
-const VideoPlayerModal = memo(({ 
-    visible, 
-    video, 
-    onClose, 
-    onRequestClose 
+const VideoPlayerModal = memo(({
+    visible,
+    video,
+    onClose,
+    onRequestClose
 }: {
     visible: boolean;
     video: VideoInfo | null;
@@ -1004,11 +1128,11 @@ const ReviewCard = memo(({ data }: { data: ReviewInfo }) => {
                     </View>
                 </View>
             </View>
-            <Text 
-                variant='small' 
-                weight='regular' 
-                className='text-gray-300' 
-                numberOfLines={10} 
+            <Text
+                variant='small'
+                weight='regular'
+                className='text-gray-300'
+                numberOfLines={10}
                 style={{ lineHeight: 18 }}
             >
                 {data.content || 'No review content available.'}
@@ -1044,7 +1168,7 @@ const VideoCard = memo(({ data, onPress }: { data: VideoInfo; onPress: (video: V
             activeOpacity={0.8}
             onPress={handlePress}
             accessibilityRole="button"
-            accessibilityLabel={`Play video: ${data.title || 'Untitled'}`}
+            accessibilityLabel={`Play video: ${data.title || data.name || 'Untitled'}`}
         >
             <View className='relative'>
                 <Image
@@ -1087,7 +1211,7 @@ const VideoCard = memo(({ data, onPress }: { data: VideoInfo; onPress: (video: V
 
             <View className='p-3'>
                 <Text variant='small' weight='semiBold' className='text-white mb-1' numberOfLines={2}>
-                    {data.title || 'Untitled Video'}
+                    {data.title || data.name || 'Untitled Video'}
                 </Text>
                 <View className='flex-row items-center justify-between mb-1'>
                     <Text variant='caption' weight='medium' className='text-primary'>

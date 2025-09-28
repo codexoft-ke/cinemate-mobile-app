@@ -6,19 +6,12 @@ import useStore from '../hooks/use-store';
 
 // Types
 export interface User {
-    user: {
-        id: string;
-        email: string;
-        name?: string;
-        firstName?: string;
-        lastName?: string;
-        username?: string;
-        profilePicture?: string;
-        preferences?: {
-            favoriteGenres?: string[];
-            notifications?: boolean;
-        };
-    }
+    id: string;
+    email: string;
+    name?: string;
+    genres?: string[] | number[];
+    maturity_filter?: string;
+    preferred_language?: string;
 }
 
 export interface LoginCredentials {
@@ -47,7 +40,7 @@ export interface AuthContextType {
     forgotPassword: (email: string) => Promise<void>;
     verifyPasswordReset: (otpCode: string | number) => Promise<void>;
     changePasswordWithReset: (password: string) => Promise<void>;
-    updateProfile: (userData: { name: string; email: string }) => Promise<void>;
+    updateProfile: (userData: { name: string; email: string; genres: string[] }) => Promise<void>;
     changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
 }
 
@@ -152,13 +145,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Extract token and user data from response
             const successResponse = response as ApiResponse<any>;
-            const { access_token, user: userData } = successResponse.data;
+            const { auth_token, user: userData } = successResponse.data;
 
-            if (!access_token) {
-                throw new Error('No access token received');
+            if (!auth_token) {
+                throw new Error('No auth token received');
             }
 
-            await storeToken(access_token);
+            await storeToken(auth_token);
             await storeUserData(userData);
 
             setIsAuthenticated(true);
@@ -254,7 +247,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Update profile function
-    const updateProfile = async (userData: { name: string; email: string }): Promise<void> => {
+    const updateProfile = async (userData: { name: string; email: string, genres: string[] }): Promise<void> => {
         try {
             const response = await useProfile.updateInfo(userData);
 
@@ -301,8 +294,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             const response = await useProfile.info();
 
             if (response.success) {
-                const successResponse = response as ApiResponse<User>;
-                return successResponse.data;
+                const successResponse = response as ApiResponse<{ user: User }>;
+                return successResponse.data.user;
             }
 
             return null;

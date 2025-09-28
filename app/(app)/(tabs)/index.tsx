@@ -8,7 +8,7 @@ import { Movie } from '@/types';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Dimensions, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { useToast } from "react-native-toast-notifications";
@@ -196,9 +196,17 @@ export default function HomeScreen() {
                         source={require('@/assets/images/icon.png')}
                         placeholder={require('@/assets/images/icon.png')}
                     />
-                    <View>
+                    <View style={{ maxWidth: screenWidth - 140 }}>
                         <Text className='text-white text-lg'>Welcome Back</Text>
-                        <Text className='text-white text-8xl' variant='h3' weight='bold' numberOfLines={1} ellipsizeMode='tail' >{user?.user.name}</Text>
+                        <Text
+                            className='text-white text-8xl'
+                            variant='h3'
+                            weight='bold'
+                            numberOfLines={1}
+                            ellipsizeMode='tail'
+                        >
+                            {user?.name?.split(' ').slice(0, 2).join(' ')}
+                        </Text>
                     </View>
                 </View>
                 <View>

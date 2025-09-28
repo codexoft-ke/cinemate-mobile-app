@@ -97,9 +97,9 @@ const getGenreIcon = (genreName: string): keyof typeof Feather.glyphMap => {
 
 export default function UpdateProfile() {
     const { user } = useAuth();
-    
-    const [name, setName] = useState(user?.user?.name || '');
-    const [email, setEmail] = useState(user?.user?.email || '');
+
+    const [name, setName] = useState(user?.name || '');
+    const [email, setEmail] = useState(user?.email || '');
     const [isLoading, setIsLoading] = useState(false);
 
     const [inputErrors, setInputErrors] = useState<InputErrors>({
@@ -155,7 +155,9 @@ export default function UpdateProfile() {
     // Genre selection state
     const [genres, setGenres] = useState<Genre[]>(defaultGenres);
     const [selectedGenres, setSelectedGenres] = useState<string[]>(
-        user?.user?.preferences?.favoriteGenres || []
+        Array.isArray(user?.genres)
+            ? user.genres.map((g: any) => String(g))
+            : []
     );
     const [showGenreModal, setShowGenreModal] = useState(false);
     const [loadingGenres, setLoadingGenres] = useState(false);
@@ -343,6 +345,21 @@ export default function UpdateProfile() {
         <View className='flex-1 bg-dark-bg'>
             <AppHeader title='Update Profile' showRightIcon={false} />
             <ScrollView className="px-4 flex-1" showsVerticalScrollIndicator={false}>
+
+                <View className="items-center mb-8 mt-4">
+                    <View className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-purple-600 items-center justify-center mb-4 shadow-lg">
+                        <View className="w-20 h-20 rounded-full bg-alt-bg items-center justify-center">
+                            <Feather name="user" size={32} color={CineMateColors.primary} />
+                        </View>
+                    </View>
+                    <Text variant="h4" weight="bold" color="#FFFFFF" className="mb-2">
+                        {user?.name || 'Update Your Profile'}
+                    </Text>
+                    <Text variant="body" color={CineMateColors.textSecondary} className="text-center">
+                        Keep your information current for the best experience
+                    </Text>
+                </View>
+
                 {/* Name Input */}
                 <View className="mb-4">
                     <Text color="#FFFFFF" variant="body" weight="medium" className="mb-2">

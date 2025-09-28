@@ -36,6 +36,7 @@ export interface EpisodeInfo {
 export interface VideoInfo {
     id: string | number
     title?: string | null
+    name?: string | null
     thumbnail?: string | null
     duration?: string | number | null
     views?: number | string | null

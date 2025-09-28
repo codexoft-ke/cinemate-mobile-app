@@ -77,9 +77,14 @@ axiosInstance.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                await apiRequest.post({
+                const response = await apiRequest.post({
                     endpoint: endPoints.auth.refreshToken
                 });
+                if (!response.success) {
+                    throw new Error(response.message);
+                }
+                const newToken = (response.data as { token: string }).token;
+                await useSecureStore.setItem('auth_token', newToken);
                 return axiosInstance(originalRequest);
             } catch (refreshError) {
                 // Clear stored auth token on refresh failure but don't redirect automatically
@@ -369,8 +374,8 @@ export const useProfile = {
     },
 
     updateInfo: async (details: { name: string; email: string, genres: string[] }): Promise<ApiResponse | ApiError> => {
-        return apiRequest.put({
-            endpoint: endPoints.profile.info,
+        return apiRequest.post({
+            endpoint: endPoints.profile.info+"/",
             data: details,
             errorMessage: "Failed to update profile information. Please try again."
         });

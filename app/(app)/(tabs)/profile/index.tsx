@@ -34,13 +34,6 @@ export default function ProfileScreen() {
             route: 'profile/update-profile',
         },
         {
-            id: 2,
-            icon: 'lock',
-            type: 'link',
-            title: 'Change Password',
-            route: 'change-password',
-        },
-        {
             id: 3,
             icon: 'send',
             type: 'link',
@@ -96,8 +89,8 @@ export default function ProfileScreen() {
                         source={require("@/assets/images/icon.png")}
                         style={{ height: 120, width: 120, borderRadius: 100, borderWidth: 3, borderColor: CineMateColors.primary }}
                     />
-                    <Text className='text-white pt-5' variant='h4' weight='bold'>{userInfo?.user?.name || "CineMate"}</Text>
-                    <Text className='text-gray-400' variant='caption' weight='medium' >{userInfo?.user?.email}</Text>
+                    <Text className='text-white pt-5' variant='h4' weight='bold'>{userInfo?.name || "CineMate"}</Text>
+                    <Text className='text-gray-400' variant='caption' weight='medium' >{userInfo?.email}</Text>
                 </View>
 
                 {/* Menu Items */}
