@@ -90,7 +90,7 @@ export default function Favourites() {
                 const apiError = error as ApiError;
                 toast.show(apiError.message || "Failed to remove from favourites", { type: "danger" });
             } finally {
-                toast.hide(loadingToastId);
+                toast.hideAll();
             }
         }
         removeFavourite();

@@ -99,7 +99,7 @@ export default function HomeScreen() {
         } catch (error: any) {
             toast.show(error.message || "Failed to update favorite status", { type: "danger" });
         } finally {
-            toast.hide(loadingToastId);
+            toast.hideAll();
         }
     }, [recommendation, trendingMovies, upcomingMovies]);
 

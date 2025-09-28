@@ -1,13 +1,12 @@
 import MovieCard from '@/components/movie-card';
 import { AppHeader } from '@/components/ui/app-header';
 import { Text } from '@/components/ui/app-text';
-import SectionHeader from '@/components/ui/section-header';
 import { ApiError, useMovies } from '@/hooks/use-api';
 import { Movie } from '@/types';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Platform, RefreshControl, ScrollView, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Dimensions, RefreshControl, View } from 'react-native';
 import { useToast } from 'react-native-toast-notifications';
 
 export default function Recommendation() {
@@ -88,7 +87,7 @@ export default function Recommendation() {
                 const apiError = error as ApiError;
                 toast.show(apiError.message || "Failed to remove from favourites", { type: "danger" });
             } finally {
-                toast.hide(loadingToastId);
+                toast.hideAll();
             }
         }
         removeFavourite();

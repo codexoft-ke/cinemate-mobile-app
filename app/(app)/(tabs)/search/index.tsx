@@ -6,7 +6,7 @@ import { Movie } from '@/types';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 import { Toast } from 'react-native-toast-notifications';
 
@@ -291,7 +291,7 @@ export default function SearchScreen() {
                 type: "danger" 
             });
         } finally {
-            Toast.hide(loadingToastId);
+            toast.hideAll();
         }
     }, [moviesApi]);
 

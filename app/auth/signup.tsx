@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/ui/app-header";
 import { Text } from "@/components/ui/app-text";
 import { CineMateColors } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, getFieldError, getValidationErrors, useAuthentication, useMovies } from "@/hooks/use-api";
 import useStore from "@/hooks/use-store";
 import { Feather } from "@expo/vector-icons";
@@ -30,6 +31,7 @@ export default function SignUp() {
     }
 
     const toast = useToast();
+    const {setIsAuthenticated} = useAuth();
 
     const genreColors: { [key: string]: string } = {
         'Action': CineMateColors.action,
@@ -310,8 +312,9 @@ export default function SignUp() {
             }
             await useStore.setItem('auth_token', auth_token);
             await useStore.setItem('user_data', JSON.stringify(userData));
+            setIsAuthenticated(true);
             // Navigate to main app
-            router.replace('/(app)/(tabs)');
+            router.replace('/');
         } catch (error: any) {
             // Check if it's a validation error (ApiError with validation details)
             if (error && !error.success && error.error?.details) {

@@ -250,7 +250,7 @@ export default function MovieInfo() {
                 { type: "danger" }
             );
         } finally {
-            toast.hide(loadingToastId);
+            toast.hideAll();
         }
     }, [movieDetails?.id, movieDetails?.is_favorite, toast]);
 
@@ -309,7 +309,7 @@ export default function MovieInfo() {
                 { type: "danger" }
             );
         } finally {
-            toast.hide(loadingToastId);
+            toast.hideAll();
         }
     }, [toast]);
 
