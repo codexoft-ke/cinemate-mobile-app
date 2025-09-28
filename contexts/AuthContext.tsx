@@ -134,8 +134,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             const response = await useAuthentication.signup(credentials);
 
-            console.log(response)
-
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 // Don't show alert here - let the component handle error display

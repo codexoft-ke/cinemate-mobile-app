@@ -304,11 +304,11 @@ export default function SignUp() {
                 throw errorResponse;
             }
             // Store token and user data
-            const { access_token, user: userData } = (response.data || {}) as { access_token: string; user: any };
-            if (!access_token) {
-                throw new Error('No access token received');
+            const { auth_token, user: userData } = (response.data || {}) as { auth_token: string; user: any };
+            if (!auth_token) {
+                throw new Error('No auth token received');
             }
-            await useStore.setItem('auth_token', access_token);
+            await useStore.setItem('auth_token', auth_token);
             await useStore.setItem('user_data', JSON.stringify(userData));
             // Navigate to main app
             router.replace('/(app)/(tabs)');
