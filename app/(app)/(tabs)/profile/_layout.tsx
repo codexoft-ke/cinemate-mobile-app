@@ -6,6 +6,7 @@ export default function Search() {
         <Stack initialRouteName='index'>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="notifications" options={{ headerShown: false }} />
+            <Stack.Screen name="update-profile" options={{ headerShown: false}} />
         </Stack>
     );
 }

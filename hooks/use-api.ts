@@ -1,10 +1,12 @@
 import { endPoints } from '@/constants/endpoints';
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig, isAxiosError } from 'axios';
 import useSecureStore from './use-store';
-import useStore from './use-store';
+import { useAuth } from '@/contexts/AuthContext';
 
-//const BASE_URL = "http://192.168.11.143:8000";
-const BASE_URL = "http://localhost:8000";
+//const BASE_URL = "http://192.168.134.51:8000";
+//const BASE_URL = "http://10.42.0.1:8000";
+//const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://cinemate.codexoft.tech";
 
 // Extend the AxiosRequestConfig to include _retry property
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -83,7 +85,9 @@ axiosInstance.interceptors.response.use(
                 // Clear stored auth token on refresh failure but don't redirect automatically
                 // Let the app's auth state management handle the navigation
                 try {
+                    
                     await useSecureStore.deleteItem('auth_token');
+                    useAuth().logout();
                 } catch (clearError) {
                     console.error('Error clearing auth token:', clearError);
                 }
@@ -98,7 +102,6 @@ axiosInstance.interceptors.response.use(
 const handleApiError = (error: unknown, fallbackMessage?: string): ApiError => {
     if (isAxiosError(error) && error.response?.data) {
         const errorData = error.response.data;
-        console.log('API Error Response:', errorData); // Debug log
         
         // Handle validation errors and structured error responses
         if (errorData.error) {
@@ -144,7 +147,6 @@ const handleApiError = (error: unknown, fallbackMessage?: string): ApiError => {
         }
     }
 
-    console.log('Unhandled API Error:', error); // Debug log
     return {
         success: false,
         message: fallbackMessage || "An error occurred",
@@ -176,7 +178,6 @@ const makeRequest = async <T = unknown>(
         }
 
         const { success, message, data, error } = response.data;
-        console.log(response)
 
         // Handle success responses
         if (success !== false) {
@@ -288,7 +289,7 @@ export const useAuthentication = {
 };
 
 export const useMovies = {
-    search: async (params: { q: string; filter: string; page: number, limit: number }): Promise<ApiResponse | ApiError> => {
+    search: async (params: { q: string; page?: number, limit?: number }): Promise<ApiResponse | ApiError> => {
         return apiRequest.get({
             endpoint: endPoints.movies.search,
             params: params,
@@ -312,7 +313,7 @@ export const useMovies = {
         });
     },
 
-    recommendations: async (params: { page: number, limit: number }): Promise<ApiResponse | ApiError> => {
+    recommendations: async (params?: { page: number, limit: number }): Promise<ApiResponse | ApiError> => {
         return apiRequest.get({
             endpoint: endPoints.movies.recommendations,
             params: params,
@@ -320,7 +321,7 @@ export const useMovies = {
         });
     },
 
-    details: async (id: string | number): Promise<ApiResponse | ApiError> => {
+    details: async (id: string): Promise<ApiResponse | ApiError> => {
         return apiRequest.get({
             endpoint: endPoints.movies.details(id),
             errorMessage: "Failed to fetch movie details. Please try again."
@@ -343,7 +344,7 @@ export const useMovies = {
         });
     },
 
-    favourites: async (params: { page: number; limit: number }): Promise<ApiResponse | ApiError> => {
+    favourites: async (params?: { page?: number; limit?: number }): Promise<ApiResponse | ApiError> => {
         return apiRequest.get({
             endpoint: endPoints.movies.favourites,
             params: params,
@@ -367,7 +368,7 @@ export const useProfile = {
         });
     },
 
-    updateInfo: async (details: { name: string; email: string }): Promise<ApiResponse | ApiError> => {
+    updateInfo: async (details: { name: string; email: string, genres: string[] }): Promise<ApiResponse | ApiError> => {
         return apiRequest.put({
             endpoint: endPoints.profile.info,
             data: details,

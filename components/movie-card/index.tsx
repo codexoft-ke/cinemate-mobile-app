@@ -141,7 +141,6 @@ const MovieCard = memo(function MovieCard({
                             </Text>
                         )}
 
-                        {/* Rating and year row */}
                         <View className="flex-row items-center">
                             {data.rating && (
                                 <View className="flex-row items-center">
@@ -153,13 +152,13 @@ const MovieCard = memo(function MovieCard({
                                 </View>
                             )}
                             <Text className="text-gray-300" variant={orientation === 'horizontal' ? 'body' : 'caption'} weight="medium">
-                                {data.release_date ? new Date(data.release_date).getFullYear() : 'N/A'}
+                                {data.release_date ? new Date(data.release_date).getFullYear().toString() : 'N/A'}
                             </Text>
                             {data.duration && (
                                 <>
                                     <Text className="text-gray-400 text-xs mx-1">•</Text>
                                     <Text className="text-gray-400 text-xs" variant={orientation === 'horizontal' ? 'body' : 'caption'} weight="regular">
-                                        {data.duration}m
+                                        {`${data.duration}m`}
                                     </Text>
                                 </>
                             )}

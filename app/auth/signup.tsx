@@ -19,6 +19,7 @@ import {
     TouchableOpacity,
     View
 } from "react-native";
+import { useToast } from "react-native-toast-notifications";
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function SignUp() {
@@ -27,6 +28,8 @@ export default function SignUp() {
         id: string;
         name: string;
     }
+
+    const toast = useToast();
 
     const genreColors: { [key: string]: string } = {
         'Action': CineMateColors.action,
@@ -187,7 +190,10 @@ export default function SignUp() {
             }
         } catch (error) {
             console.error('Error fetching genres:', error);
-            Alert.alert('Error', 'Failed to load genres. Please try again.');
+            toast.show('Failed to load genres. Please try again.', {
+                type: "danger",
+                duration: 3500,
+            });
         } finally {
             setLoadingGenres(false);
         }
@@ -275,11 +281,11 @@ export default function SignUp() {
         }
 
         if (selectedGenres.length === 0) {
-            Alert.alert(
-                'Select Genres',
-                'Please select at least one favorite genre to personalize your movie recommendations.',
-                [{ text: 'OK', onPress: () => setShowGenreModal(true) }]
-            );
+            toast.show('Please select at least one favorite genre to personalize your movie recommendations.', {
+                type: "danger",
+                duration: 3500,
+                onPress: () => setShowGenreModal(true)
+            });
             return;
         }
 
@@ -313,11 +319,10 @@ export default function SignUp() {
 
                 // Handle non_field_errors as a general error alert
                 if (validationErrors && validationErrors.non_field_errors && validationErrors.non_field_errors.length > 0) {
-                    Alert.alert(
-                        'Sign Up Failed',
-                        validationErrors.non_field_errors.join('\n'),
-                        [{ text: 'OK' }]
-                    );
+                    toast.show(validationErrors.non_field_errors.join('\n'), {
+                        type: "danger",
+                        duration: 3500,
+                    })
                     return;
                 }
 
@@ -346,20 +351,16 @@ export default function SignUp() {
                     });
                     setInputErrors(updatedErrors);
                 } else {
-                    // Fallback to generic error
-                    Alert.alert(
-                        'Sign Up Failed',
-                        error.message || 'Validation failed. Please check your inputs.',
-                        [{ text: 'OK' }]
-                    );
+                    toast.show(error.message || 'Validation failed. Please check your inputs.', {
+                        type: "danger",
+                        duration: 3500,
+                    })
                 }
             } else {
-                // Show generic error alert for non-validation errors
-                Alert.alert(
-                    'Sign Up Failed',
-                    error.message || 'An error occurred during sign up. Please try again.',
-                    [{ text: 'OK' }]
-                );
+                toast.show(error.message || 'An error occurred during sign up. Please try again.', {
+                    type: "danger",
+                    duration: 3500,
+                })
             }
         } finally {
             setIsLoading(false);

@@ -2,6 +2,7 @@ import MovieCard from '@/components/movie-card';
 import { Text } from '@/components/ui/app-text';
 import SectionHeader from '@/components/ui/section-header';
 import { CineMateColors } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMovies } from '@/hooks/use-api';
 import { Movie } from '@/types';
 import { Feather } from '@expo/vector-icons';
@@ -25,6 +26,7 @@ export default function HomeScreen() {
 
     const router = useRouter();
     const toast = useToast();
+    const {user} = useAuth();
 
     const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -196,7 +198,7 @@ export default function HomeScreen() {
                     />
                     <View>
                         <Text className='text-white text-lg'>Welcome Back</Text>
-                        <Text className='text-white text-8xl' variant='h3' weight='bold' numberOfLines={1} ellipsizeMode='tail' >Mr. John Doe</Text>
+                        <Text className='text-white text-8xl' variant='h3' weight='bold' numberOfLines={1} ellipsizeMode='tail' >{user?.user.name}</Text>
                     </View>
                 </View>
                 <View>

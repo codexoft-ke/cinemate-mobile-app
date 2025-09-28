@@ -1,450 +1,138 @@
 import MovieCard from '@/components/movie-card';
 import { AppHeader } from '@/components/ui/app-header';
+import { Text } from '@/components/ui/app-text';
 import SectionHeader from '@/components/ui/section-header';
+import { ApiError, useMovies } from '@/hooks/use-api';
 import { Movie } from '@/types';
+import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dimensions, Platform, RefreshControl, ScrollView, View, ActivityIndicator } from 'react-native';
+import { useToast } from 'react-native-toast-notifications';
 
 export default function Recommendation() {
     // Card dimensions for horizontal scroll
-    const cardWidth = 140; // Card width for horizontal scroll
-    const cardHeight = 200; // Card height for horizontal scroll
+    const screenWidth = Dimensions.get('window').width;
+    const cardWidth = 150; // Minimum card width
+    const padding = 32; // Total horizontal padding (16px on each side)
+    const spacing = 8; // Space between cards
 
-    // Sample movie data organized by sections
-    const [newAndTrending] = useState<Movie[]>([
-        {
-            id: 278,
-            title: "The Shawshank Redemption",
-            poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            is_favorite: false,
-            releaseDate: "1994-09-23",
-            genre: "Drama",
-            rating: 8.712
-        },
-        {
-            id: 238,
-            title: "The Godfather",
-            poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            is_favorite: false,
-            releaseDate: "1972-03-24",
-            genre: "Drama",
-            rating: 8.685
-        },
-        {
-            id: 240,
-            title: "The Godfather Part II",
-            poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            is_favorite: false,
-            releaseDate: "1974-12-20",
-            genre: "Drama",
-            rating: 8.57
-        },
-        {
-            id: 424,
-            title: "Schindler's List",
-            poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            is_favorite: false,
-            releaseDate: "1993-12-15",
-            genre: "Drama",
-            rating: 8.566
-        },
-        {
-            id: 389,
-            title: "12 Angry Men",
-            poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            is_favorite: false,
-            releaseDate: "1957-04-10",
-            genre: "Drama",
-            rating: 8.549
-        },
-        {
-            id: 129,
-            title: "Spirited Away",
-            poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            is_favorite: false,
-            releaseDate: "2002-09-20",
-            genre: "Animation",
-            rating: 8.5
-        },
-        {
-            id: 155,
-            title: "The Dark Knight",
-            poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            is_favorite: false,
-            releaseDate: "2008-07-18",
-            genre: "Drama",
-            rating: 8.523
-        },
-        {
-            id: 19404,
-            title: "Dilwale Dulhania Le Jayenge",
-            poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            is_favorite: false,
-            releaseDate: "1995-10-20",
-            genre: "Comedy",
-            rating: 8.5
-        },
-        {
-            id: 497,
-            title: "The Green Mile",
-            poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            is_favorite: false,
-            releaseDate: "1999-12-10",
-            genre: "Fantasy",
-            rating: 8.504
-        },
-        {
-            id: 496243,
-            title: "Parasite",
-            poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            is_favorite: false,
-            releaseDate: "2019-10-11",
-            genre: "Comedy",
-            rating: 8.498
-        }
-    ]);
+    const toast = useToast();
 
-    const [recommendedForYou] = useState<Movie[]>([
-        {
-            id: 278,
-            title: "The Shawshank Redemption",
-            poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            is_favorite: false,
-            releaseDate: "1994-09-23",
-            genre: "Drama",
-            rating: 8.712
-        },
-        {
-            id: 238,
-            title: "The Godfather",
-            poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            is_favorite: false,
-            releaseDate: "1972-03-24",
-            genre: "Drama",
-            rating: 8.685
-        },
-        {
-            id: 240,
-            title: "The Godfather Part II",
-            poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            is_favorite: false,
-            releaseDate: "1974-12-20",
-            genre: "Drama",
-            rating: 8.57
-        },
-        {
-            id: 424,
-            title: "Schindler's List",
-            poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            is_favorite: false,
-            releaseDate: "1993-12-15",
-            genre: "Drama",
-            rating: 8.566
-        },
-        {
-            id: 389,
-            title: "12 Angry Men",
-            poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            is_favorite: false,
-            releaseDate: "1957-04-10",
-            genre: "Drama",
-            rating: 8.549
-        },
-        {
-            id: 129,
-            title: "Spirited Away",
-            poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            is_favorite: false,
-            releaseDate: "2002-09-20",
-            genre: "Animation",
-            rating: 8.5
-        },
-        {
-            id: 155,
-            title: "The Dark Knight",
-            poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            is_favorite: false,
-            releaseDate: "2008-07-18",
-            genre: "Drama",
-            rating: 8.523
-        },
-        {
-            id: 19404,
-            title: "Dilwale Dulhania Le Jayenge",
-            poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            is_favorite: false,
-            releaseDate: "1995-10-20",
-            genre: "Comedy",
-            rating: 8.5
-        },
-        {
-            id: 497,
-            title: "The Green Mile",
-            poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            is_favorite: false,
-            releaseDate: "1999-12-10",
-            genre: "Fantasy",
-            rating: 8.504
-        },
-        {
-            id: 496243,
-            title: "Parasite",
-            poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            is_favorite: false,
-            releaseDate: "2019-10-11",
-            genre: "Comedy",
-            rating: 8.498
-        }
-    ]);
-
-    const [favoriteGenres] = useState<Movie[]>([
-        {
-            id: 278,
-            title: "The Shawshank Redemption",
-            poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            is_favorite: false,
-            releaseDate: "1994-09-23",
-            genre: "Drama",
-            rating: 8.712
-        },
-        {
-            id: 238,
-            title: "The Godfather",
-            poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            is_favorite: false,
-            releaseDate: "1972-03-24",
-            genre: "Drama",
-            rating: 8.685
-        },
-        {
-            id: 240,
-            title: "The Godfather Part II",
-            poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            is_favorite: false,
-            releaseDate: "1974-12-20",
-            genre: "Drama",
-            rating: 8.57
-        },
-        {
-            id: 424,
-            title: "Schindler's List",
-            poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            is_favorite: false,
-            releaseDate: "1993-12-15",
-            genre: "Drama",
-            rating: 8.566
-        },
-        {
-            id: 389,
-            title: "12 Angry Men",
-            poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            is_favorite: false,
-            releaseDate: "1957-04-10",
-            genre: "Drama",
-            rating: 8.549
-        },
-        {
-            id: 129,
-            title: "Spirited Away",
-            poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            is_favorite: false,
-            releaseDate: "2002-09-20",
-            genre: "Animation",
-            rating: 8.5
-        },
-        {
-            id: 155,
-            title: "The Dark Knight",
-            poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            is_favorite: false,
-            releaseDate: "2008-07-18",
-            genre: "Drama",
-            rating: 8.523
-        },
-        {
-            id: 19404,
-            title: "Dilwale Dulhania Le Jayenge",
-            poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            is_favorite: false,
-            releaseDate: "1995-10-20",
-            genre: "Comedy",
-            rating: 8.5
-        },
-        {
-            id: 497,
-            title: "The Green Mile",
-            poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            is_favorite: false,
-            releaseDate: "1999-12-10",
-            genre: "Fantasy",
-            rating: 8.504
-        },
-        {
-            id: 496243,
-            title: "Parasite",
-            poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            is_favorite: false,
-            releaseDate: "2019-10-11",
-            genre: "Comedy",
-            rating: 8.498
-        }
-    ]);
-
-    const [basedOnExploring] = useState<Movie[]>([
-        {
-            id: 278,
-            title: "The Shawshank Redemption",
-            poster: "https://image.tmdb.org/t/p/original/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
-            is_favorite: false,
-            releaseDate: "1994-09-23",
-            genre: "Drama",
-            rating: 8.712
-        },
-        {
-            id: 238,
-            title: "The Godfather",
-            poster: "https://image.tmdb.org/t/p/original/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            is_favorite: false,
-            releaseDate: "1972-03-24",
-            genre: "Drama",
-            rating: 8.685
-        },
-        {
-            id: 240,
-            title: "The Godfather Part II",
-            poster: "https://image.tmdb.org/t/p/original/hek3koDUyRQk7FIhPXsa6mT2Zc3.jpg",
-            is_favorite: false,
-            releaseDate: "1974-12-20",
-            genre: "Drama",
-            rating: 8.57
-        },
-        {
-            id: 424,
-            title: "Schindler's List",
-            poster: "https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg",
-            is_favorite: false,
-            releaseDate: "1993-12-15",
-            genre: "Drama",
-            rating: 8.566
-        },
-        {
-            id: 389,
-            title: "12 Angry Men",
-            poster: "https://image.tmdb.org/t/p/original/ow3wq89wM8qd5X7hWKxiRfsFf9C.jpg",
-            is_favorite: false,
-            releaseDate: "1957-04-10",
-            genre: "Drama",
-            rating: 8.549
-        },
-        {
-            id: 129,
-            title: "Spirited Away",
-            poster: "https://image.tmdb.org/t/p/original/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-            is_favorite: false,
-            releaseDate: "2002-09-20",
-            genre: "Animation",
-            rating: 8.5
-        },
-        {
-            id: 155,
-            title: "The Dark Knight",
-            poster: "https://image.tmdb.org/t/p/original/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            is_favorite: false,
-            releaseDate: "2008-07-18",
-            genre: "Drama",
-            rating: 8.523
-        },
-        {
-            id: 19404,
-            title: "Dilwale Dulhania Le Jayenge",
-            poster: "https://image.tmdb.org/t/p/original/2CAL2433ZeIihfX1Hb2139CX0pW.jpg",
-            is_favorite: false,
-            releaseDate: "1995-10-20",
-            genre: "Comedy",
-            rating: 8.5
-        },
-        {
-            id: 497,
-            title: "The Green Mile",
-            poster: "https://image.tmdb.org/t/p/original/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-            is_favorite: false,
-            releaseDate: "1999-12-10",
-            genre: "Fantasy",
-            rating: 8.504
-        },
-        {
-            id: 496243,
-            title: "Parasite",
-            poster: "https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-            is_favorite: false,
-            releaseDate: "2019-10-11",
-            genre: "Comedy",
-            rating: 8.498
-        }
-    ]);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); // Loading state
+    const [recommendedForYou, setRecommendedForYou] = useState<Movie[]>([]);
 
     const handleMoviePress = (movie: Movie) => {
         router.push(`/movie/${movie.id}`);
     }
 
-    // Update the movie's favorite status in the arrays
-    const handleFavoritePress = useCallback((movie: Movie) => {
-        // TODO: Implement favorite toggle logic
+    const numColumns = useMemo(() => {
+        const availableWidth = screenWidth - padding;
+        const columns = Math.floor(availableWidth / (cardWidth + spacing));
+        return Math.max(2, columns); // Minimum 2 columns
+    }, [screenWidth]);
+
+    const refreshMovies = useCallback(async () => {
+        setIsRefreshing(true);
+        try {
+            await fetchRecommendations();
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsRefreshing(false)
+        }
+    }, [])
+
+    const fetchRecommendations = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await useMovies.recommendations();
+            if (!response.success) {
+                throw new Error(response.message || "Failed to load movies");
+
+            }
+            if (response?.data && typeof response.data === 'object' && 'movies' in response.data && Array.isArray((response.data as any).movies)) {
+                setRecommendedForYou((response.data as { movies: Movie[] }).movies);
+            } else {
+                throw new Error("Invalid response data format");
+            }
+        } catch (error) {
+            const apiError = error as ApiError;
+            toast.show(apiError.message || "Failed to fetch movies", { type: "danger" });
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
 
-    // Render horizontal movie list component
-    const renderHorizontalMovieList = (movies: Movie[], sectionTitle: string) => (
-        <View className="mb-6 px-4">
-            <SectionHeader 
-                title={sectionTitle} 
-                showButton={false}
-            />
-            <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                    contentContainerClassName={`pr-2 gap-3 ${Platform.OS === "web" && "overflow-x-scroll w-full custom-scrollbar"}`}
-            >
-                {movies.map((movie, index) => (
-                    <View 
-                        key={movie.id} 
-                        style={{ 
-                            width: cardWidth, 
-                            marginRight: index === movies.length - 1 ? 16 : 12 
-                        }}
-                    >
-                        <MovieCard
-                            data={movie}
-                            onPress={() => handleMoviePress(movie)}
-                            onFavoritePress={() => handleFavoritePress(movie)}
-                            style={{ width: cardWidth, height: cardHeight }}
-                        />
-                    </View>
-                ))}
-            </ScrollView>
-        </View>
-    );
+    // Fetch trending movies on component mount
+    useEffect(() => {
+        fetchRecommendations();
+    }, []);
+
+    const handleFavoritePress = useCallback((movie: Movie) => {
+        const removeFavourite = async () => {
+            const loadingToastId = toast.show("Removing from favourites...", { type: "normal", placement: "top", duration: 0, animationType: "slide-in" });
+            try {
+                const response = await useMovies.removeFromFavourites({ movie_id: movie.id })
+                if (response.success) {
+                    setRecommendedForYou((prev) => {
+                        const previousData = prev;
+                        return previousData.filter((movies) => movie.id !== movies.id);
+                    })
+                    toast.show("Removed from favourites", { type: "success" });
+                    return;
+                }
+                throw response as ApiError;
+            } catch (error) {
+                const apiError = error as ApiError;
+                toast.show(apiError.message || "Failed to remove from favourites", { type: "danger" });
+            } finally {
+                toast.hide(loadingToastId);
+            }
+        }
+        removeFavourite();
+    }, [recommendedForYou]);
+
     return (
         <View className='flex-1 bg-dark-bg'>
             <AppHeader title='Recommendation' />
-
-            <ScrollView 
-                className="flex-1" 
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
-            >
-                {/* New & Trending for You */}
-                {renderHorizontalMovieList(newAndTrending, "New & Trending for You")}
-
-                {/* Recommended for You */}
-                {renderHorizontalMovieList(recommendedForYou, "Recommended for You")}
-
-                {/* Your Favorite Genres */}
-                {renderHorizontalMovieList(favoriteGenres, "Your Favorite Genres")}
-
-                {/* Based on Your Exploring */}
-                {renderHorizontalMovieList(basedOnExploring, "Based on Your Exploring")}
-            </ScrollView>
-        </View>
+            <View className="px-4 mt-4 flex-1">
+                {isLoading ? (
+                    <View className="flex-1 items-center justify-center">
+                        <ActivityIndicator size="large" color="#fff" />
+                    </View>
+                ) : (
+                    <FlashList
+                        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshMovies} />}
+                        data={recommendedForYou}
+                        keyExtractor={(item: Movie) => item.id.toString()}
+                        renderItem={({ item, index }: { item: Movie; index: number }) => (
+                            <View style={{
+                                flex: 1,
+                                marginLeft: index % numColumns === 0 ? 0 : 4,
+                                marginRight: index % numColumns === numColumns - 1 ? 0 : 4
+                            }}>
+                                <MovieCard
+                                    data={item}
+                                    style={{ width: "100%" }}
+                                    onPress={() => handleMoviePress(item)}
+                                    onFavoritePress={() => handleFavoritePress(item)} />
+                            </View>
+                        )}
+                        numColumns={numColumns}
+                        key={numColumns} // Force re-render when numColumns changes
+                        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                        ListEmptyComponent={() => (
+                            <View className="flex-1 items-center justify-center mt-10">
+                                <Text className="text-gray-400 font-montserrat-medium">No results found</Text>
+                            </View>
+                        )}
+                        contentContainerClassName='pb-10 custom-scrollbar'
+                        contentContainerStyle={{ paddingBottom: 100 }}
+                    />
+                )}
+            </View>
+        </View >
     );
 }

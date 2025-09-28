@@ -6,17 +6,19 @@ import useStore from '../hooks/use-store';
 
 // Types
 export interface User {
-    id: string;
-    email: string;
-    name?: string;
-    firstName?: string;
-    lastName?: string;
-    username?: string;
-    profilePicture?: string;
-    preferences?: {
-        favoriteGenres?: string[];
-        notifications?: boolean;
-    };
+    user: {
+        id: string;
+        email: string;
+        name?: string;
+        firstName?: string;
+        lastName?: string;
+        username?: string;
+        profilePicture?: string;
+        preferences?: {
+            favoriteGenres?: string[];
+            notifications?: boolean;
+        };
+    }
 }
 
 export interface LoginCredentials {
@@ -37,7 +39,7 @@ export interface AuthContextType {
     isAuthenticated: boolean;
     setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
     isLoading: boolean;
-    
+
     // Actions
     login: (credentials: LoginCredentials) => Promise<void>;
     signup: (credentials: SignUpCredentials) => Promise<void>;
@@ -136,11 +138,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const signup = async (credentials: SignUpCredentials): Promise<void> => {
         try {
             setIsLoading(true);
-            
+
             const response = await useAuthentication.signup(credentials);
 
             console.log(response)
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 // Don't show alert here - let the component handle error display
@@ -151,16 +153,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Extract token and user data from response
             const successResponse = response as ApiResponse<any>;
             const { access_token, user: userData } = successResponse.data;
-            
+
             if (!access_token) {
                 throw new Error('No access token received');
             }
 
             await storeToken(access_token);
             await storeUserData(userData);
-            
+
             setIsAuthenticated(true);
-            
+
             // Navigate to main app
             router.replace('/(app)/(tabs)');
         } catch (error: any) {
@@ -175,7 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async (): Promise<void> => {
         try {
             setIsLoading(true);
-            
+
             // Try to logout on server (optional - don't fail if it doesn't work)
             try {
                 await useAuthentication.logout();
@@ -190,7 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(null);
             setIsAuthenticated(false);
             setIsLoading(false);
-            
+
             // Navigate to auth screen
             router.replace('/auth/signin');
         }
@@ -200,13 +202,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const forgotPassword = async (email: string): Promise<void> => {
         try {
             const response = await useAuthentication.forgotPassword({ email });
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 Alert.alert('Error', errorResponse.message);
                 throw new Error(errorResponse.message);
             }
-            
+
             Alert.alert('Success', 'Password reset instructions have been sent to your email.');
         } catch (error: any) {
             console.error('Forgot password error:', error);
@@ -218,13 +220,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const verifyPasswordReset = async (otpCode: string | number): Promise<void> => {
         try {
             const response = await useAuthentication.forgotPasswordVerify({ otp_code: otpCode });
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 Alert.alert('Error', errorResponse.message);
                 throw new Error(errorResponse.message);
             }
-            
+
             Alert.alert('Success', 'OTP verified successfully. You can now change your password.');
         } catch (error: any) {
             console.error('Verify password reset error:', error);
@@ -236,13 +238,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const changePasswordWithReset = async (password: string): Promise<void> => {
         try {
             const response = await useAuthentication.forgotPasswordChange({ password });
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 Alert.alert('Error', errorResponse.message);
                 throw new Error(errorResponse.message);
             }
-            
+
             Alert.alert('Success', 'Password has been reset successfully.');
             router.replace('/auth/signin');
         } catch (error: any) {
@@ -255,13 +257,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const updateProfile = async (userData: { name: string; email: string }): Promise<void> => {
         try {
             const response = await useProfile.updateInfo(userData);
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 Alert.alert('Error', errorResponse.message);
                 throw new Error(errorResponse.message);
             }
-            
+
             const successResponse = response as ApiResponse<User>;
             const updatedUser = successResponse.data;
             await storeUserData(updatedUser);
@@ -279,13 +281,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 old_password: oldPassword,
                 new_password: newPassword,
             });
-            
+
             if (!response.success) {
                 const errorResponse = response as ApiError;
                 Alert.alert('Error', errorResponse.message);
                 throw new Error(errorResponse.message);
             }
-            
+
             Alert.alert('Success', 'Password changed successfully.');
         } catch (error: any) {
             console.error('Change password error:', error);
@@ -297,12 +299,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchUserProfile = async (): Promise<User | null> => {
         try {
             const response = await useProfile.info();
-            
+
             if (response.success) {
                 const successResponse = response as ApiResponse<User>;
                 return successResponse.data;
             }
-            
+
             return null;
         } catch (error) {
             console.error('Fetch user profile error:', error);
@@ -314,7 +316,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initializeAuth = async (): Promise<void> => {
         try {
             setIsLoading(true);
-            
+
             const [token, userDataString] = await Promise.all([
                 useStore.getItem(TOKEN_KEY),
                 useStore.getItem(USER_KEY),
@@ -323,7 +325,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (token && userDataString) {
                 // Try to fetch fresh user data from server to ensure token is still valid
                 const freshUserData = await fetchUserProfile();
-                
+
                 if (freshUserData) {
                     // Token is valid and we got fresh user data
                     await storeUserData(freshUserData);

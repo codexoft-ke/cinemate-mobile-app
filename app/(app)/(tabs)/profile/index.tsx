@@ -1,14 +1,21 @@
 import { AppHeader } from '@/components/ui/app-header';
 import { Text } from '@/components/ui/app-text';
 import { CineMateColors } from '@/constants/theme';
+import { useAuth, User } from '@/contexts/AuthContext';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Linking, ScrollView, TouchableOpacity, View } from 'react-native';
+import { useToast } from 'react-native-toast-notifications';
 
 export default function ProfileScreen() {
 
     const router = useRouter();
+    const toast = useToast();
+
+    const { user: fetchUserInfo, logout } = useAuth();
+    const [userInfo, setUserInfo] = useState<User>();
 
     interface MenuItems {
         id: string | number
@@ -22,9 +29,9 @@ export default function ProfileScreen() {
         {
             id: 1,
             icon: 'user',
-            type: 'link',
+            type: 'route',
             title: 'Update Profile',
-            route: 'update-profile',
+            route: 'profile/update-profile',
         },
         {
             id: 2,
@@ -56,9 +63,24 @@ export default function ProfileScreen() {
         }
     ];
 
-    const logOut = () => {
-
+    const logOut = async () => {
+        const loadingToast = toast.show("Logging Out. Please wait!!!", {
+            type: "normal",
+            duration: 0
+        })
+        try {
+            await logout();
+        } catch (error) {
+            console.log(error)
+        } finally {
+            toast.hide(loadingToast)
+        }
     }
+
+    useEffect(() => {
+        console.log(fetchUserInfo);
+            setUserInfo(fetchUserInfo as User);
+    }, [fetchUserInfo])
 
     return (
         <View className='flex-1 bg-dark-bg'>
@@ -72,10 +94,10 @@ export default function ProfileScreen() {
                 <View className='flex-column justify-center items-center mt-10'>
                     <Image
                         source={require("@/assets/images/icon.png")}
-                        style={{ height: 120, width: 120, borderRadius: 100, borderWidth:3, borderColor: CineMateColors.primary }}
+                        style={{ height: 120, width: 120, borderRadius: 100, borderWidth: 3, borderColor: CineMateColors.primary }}
                     />
-                    <Text className='text-white pt-5' variant='h4' weight='bold'>Martin Ngugi</Text>
-                    <Text className='text-gray-400' variant='caption' weight='medium' >dev@codexoft.tech</Text>
+                    <Text className='text-white pt-5' variant='h4' weight='bold'>{userInfo?.user?.name || "CineMate"}</Text>
+                    <Text className='text-gray-400' variant='caption' weight='medium' >{userInfo?.user?.email}</Text>
                 </View>
 
                 {/* Menu Items */}
