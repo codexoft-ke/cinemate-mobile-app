@@ -7,7 +7,7 @@ export default function Notifications() {
         <View className='flex-1 bg-dark-bg'>
             <AppHeader title='Notifications' showRightIcon={false} />
             <View className='flex-1 justify-center items-center'>
-                <Text className='text-white'>Notifications</Text>
+                <Text className='text-white'>Coming Soon</Text>
             </View>
         </View>
     );
